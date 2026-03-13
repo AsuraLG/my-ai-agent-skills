@@ -1,0 +1,102 @@
+[
+  {
+    "query": "帮我下载这个 YouTube 视频：https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+    "should_trigger": true,
+    "notes": "直接下载请求，中文 + YouTube URL"
+  },
+  {
+    "query": "我想把 B 站的视频保存到本地，链接是 https://www.bilibili.com/video/BV1xx411c7mD",
+    "should_trigger": true,
+    "notes": "保存本地需求，Bilibili"
+  },
+  {
+    "query": "把这个视频 https://www.youtube.com/watch?v=xxxxx 的音频提取成 MP3",
+    "should_trigger": true,
+    "notes": "音频提取请求"
+  },
+  {
+    "query": "老板发了个 Vimeo 链接给我，我需要下载下来离线看",
+    "should_trigger": true,
+    "notes": "离线观看需求，Vimeo"
+  },
+  {
+    "query": "从 Dailymotion 上扒个视频下来",
+    "should_trigger": true,
+    "notes": "口语化表达，扒视频"
+  },
+  {
+    "query": "我想批量下载一个 YouTube 播放列表，能做到吗",
+    "should_trigger": true,
+    "notes": "播放列表下载"
+  },
+  {
+    "query": "把这个 Twitter 视频下载到我下载文件夹里",
+    "should_trigger": true,
+    "notes": "Twitter/X 视频下载"
+  },
+  {
+    "query": "获取这个 TikTok 视频作为 MP4 文件",
+    "should_trigger": true,
+    "notes": "TikTok 下载，指定格式"
+  },
+  {
+    "query": "我需要把这个 Instagram 的 reel 存档一下，免得被删掉",
+    "should_trigger": true,
+    "notes": "Instagram 内容存档"
+  },
+  {
+    "query": "能把 YouTube 视频用 4K 画质下载吗",
+    "should_trigger": true,
+    "notes": "指定画质下载"
+  },
+  {
+    "query": "把这个 MP4 文件转换成 AVI 格式",
+    "should_trigger": false,
+    "notes": "视频转换，不是下载"
+  },
+  {
+    "query": "上传这个视频到 YouTube",
+    "should_trigger": false,
+    "notes": "上传，与下载相反"
+  },
+  {
+    "query": "编辑这个视频文件，加一些特效",
+    "should_trigger": false,
+    "notes": "视频编辑"
+  },
+  {
+    "query": "压缩这个视频，让文件小一点",
+    "should_trigger": false,
+    "notes": "视频压缩"
+  },
+  {
+    "query": "把这两个视频合并成一个",
+    "should_trigger": false,
+    "notes": "视频合并"
+  },
+  {
+    "query": "剪掉视频的前 10 秒钟",
+    "should_trigger": false,
+    "notes": "视频剪辑"
+  },
+  {
+    "query": "每隔 5 秒从这个视频里提取一帧画面",
+    "should_trigger": false,
+    "notes": "帧提取"
+  },
+  {
+    "query": "给这个视频生成字幕",
+    "should_trigger": false,
+    "notes": "生成字幕，不是下载"
+  },
+  {
+    "query": "分析一下这个视频内容是什么",
+    "should_trigger": false,
+    "notes": "视频分析"
+  },
+  {
+    "query": "怎么把这个视频从服务器推流到客户端",
+    "should_trigger": false,
+    "notes": "流媒体设置"
+  }
+]

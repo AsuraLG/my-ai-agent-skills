@@ -1,0 +1,185 @@
+{
+  "skill_name": "yt-dlp-video-downloader",
+  "evals": [
+    {
+      "id": 1,
+      "name": "basic-youtube-download",
+      "prompt": "Download this YouTube video for me: https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+      "expected_output": "Video downloaded successfully with confirmation of file path and video title",
+      "files": [],
+      "assertions": [
+        {
+          "name": "yt_dlp_invoked",
+          "description": "yt-dlp command was invoked",
+          "type": "command_executed",
+          "target": "yt-dlp"
+        },
+        {
+          "name": "success_confirmation",
+          "description": "Success message was shown to user",
+          "type": "output_contains",
+          "target": "download"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "name": "audio-only-extraction",
+      "prompt": "I need just the audio from this Bilibili video https://www.bilibili.com/video/BV1GJ411x7h7 as an MP3 file",
+      "expected_output": "Audio extracted and saved as MP3 file",
+      "files": [],
+      "assertions": [
+        {
+          "name": "audio_format_used",
+          "description": "Audio format option was used",
+          "type": "command_contains",
+          "target": "--format audio"
+        },
+        {
+          "name": "mp3_output",
+          "description": "MP3 output was mentioned",
+          "type": "output_contains",
+          "target": "mp3"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "name": "specific-quality-download",
+      "prompt": "Download this YouTube video at 720p quality: https://www.youtube.com/watch?v=xxxxx",
+      "expected_output": "Video downloaded at 720p resolution",
+      "files": [],
+      "assertions": [
+        {
+          "name": "quality_specified",
+          "description": "Quality parameter was set to 720",
+          "type": "command_contains",
+          "target": "--quality 720"
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "name": "subtitle-download",
+      "prompt": "Download this video with English and Chinese subtitles: https://www.youtube.com/watch?v=xxxxx",
+      "expected_output": "Video downloaded along with .srt subtitle files for both languages",
+      "files": [],
+      "assertions": [
+        {
+          "name": "subtitles_option_used",
+          "description": "Subtitles option was used",
+          "type": "command_contains",
+          "target": "--subtitles"
+        },
+        {
+          "name": "languages_specified",
+          "description": "Both en and zh languages were specified",
+          "type": "command_contains",
+          "target": "en,zh"
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "name": "authenticated-download-cookies",
+      "prompt": "Download this members-only YouTube video using my Chrome cookies: https://www.youtube.com/watch?v=xxxxx",
+      "expected_output": "Video downloaded using browser cookies for authentication",
+      "files": [],
+      "assertions": [
+        {
+          "name": "cookies_option_used",
+          "description": "Cookies from browser option was used",
+          "type": "command_contains",
+          "target": "--cookies chrome"
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "name": "resume-interrupted-download",
+      "prompt": "Continue downloading this partially downloaded video file: https://www.youtube.com/watch?v=xxxxx",
+      "expected_output": "Download resumed from where it left off",
+      "files": [],
+      "assertions": [
+        {
+          "name": "continue_option_used",
+          "description": "Continue/resume option was used",
+          "type": "command_contains",
+          "target": "--continue"
+        }
+      ]
+    },
+    {
+      "id": 7,
+      "name": "custom-output-directory",
+      "prompt": "Download this video to my Videos folder: https://www.youtube.com/watch?v=xxxxx and save it in ~/Videos/tutorials/",
+      "expected_output": "Video saved to the specified directory path",
+      "files": [],
+      "assertions": [
+        {
+          "name": "output_dir_specified",
+          "description": "Output directory was specified",
+          "type": "command_contains",
+          "target": "--output-dir"
+        },
+        {
+          "name": "correct_path",
+          "description": "Correct Videos/tutorials path was used",
+          "type": "command_contains",
+          "target": "~/Videos/tutorials"
+        }
+      ]
+    },
+    {
+      "id": 8,
+      "name": "list-available-formats",
+      "prompt": "Show me what video formats are available for this URL: https://www.youtube.com/watch?v=xxxxx",
+      "expected_output": "List of available formats displayed without downloading",
+      "files": [],
+      "assertions": [
+        {
+          "name": "list_formats_used",
+          "description": "List formats option was used",
+          "type": "command_contains",
+          "target": "--list-formats"
+        }
+      ]
+    },
+    {
+      "id": 9,
+      "name": "progress-minimal-display",
+      "prompt": "Download this video quietly with minimal output: https://www.youtube.com/watch?v=xxxxx",
+      "expected_output": "Download completed with minimal progress display",
+      "files": [],
+      "assertions": [
+        {
+          "name": "minimal_progress_used",
+          "description": "Minimal progress option was used",
+          "type": "command_contains",
+          "target": "--progress minimal"
+        }
+      ]
+    },
+    {
+      "id": 10,
+      "name": "yt-dlp-not-installed",
+      "prompt": "Download this video: https://www.youtube.com/watch?v=xxxxx (assume yt-dlp is not installed)",
+      "expected_output": "Installation instructions provided before attempting download",
+      "files": [],
+      "assertions": [
+        {
+          "name": "installation_checked",
+          "description": "yt-dlp installation was checked",
+          "type": "command_executed",
+          "target": "yt-dlp --version"
+        },
+        {
+          "name": "install_instructions_provided",
+          "description": "Installation instructions were shown",
+          "type": "output_contains",
+          "target": "install"
+        }
+      ]
+    }
+  ]
+}
