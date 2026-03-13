@@ -1,4 +1,10 @@
 {
+  "provider_type": "openai_compatible",
   "base_url": "https://your-api-endpoint.com/v1",
-  "api_key": "your-api-key-here"
+  "api_key": "your-api-key-here",
+  "model_id": "your-model-id-here",
+  "proxy_enabled": false,
+  "proxy_type": "http",
+  "proxy_host": "127.0.0.1",
+  "proxy_port": 7890
 }
