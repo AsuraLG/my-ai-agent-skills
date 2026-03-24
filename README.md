@@ -20,5 +20,6 @@ AI Agent 自用 skill 合集。
 - `yt-dlp-video-downloader` 背后的 `yt-dlp`、FFmpeg 及相关生态开发者
 - `wechat-article-fetch` 所参考思路、相关抓取工具链与测试基础设施的贡献者
 - `travel-guide-maker` 所依赖的 `docx`、`pandoc` 及相关文档生成工具链开发者
+- `xiaohongshu-skills` 的开发者，`travel-guide-maker` 可与其协作实现从小红书搜索采集到攻略文档输出的全流程自动化
 
 也感谢所有为这些软件、库、协议和社区持续投入的开发者，让这些 skill 能够被整理、复用并持续演进。
