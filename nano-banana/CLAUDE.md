@@ -47,7 +47,7 @@
 ### openrouter
 - endpoint: `.../chat/completions`
 - 使用 `messages` 发送请求。
-- 支持纯文本生图，也支持“文本 + 单张参考图”。
+- 支持纯文本生图，也支持”文本 + 多张参考图”（`--image` 接受空格分隔的多个路径）。
 - `modalities` 固定传 `[
   "image",
   "text"
@@ -122,5 +122,4 @@
 ## 后续可演进方向
 - 增加更多 provider adapter。
 - 为 provider payload/response 增加轻量测试。
-- 如确有需求，再支持多参考图。
 - 如确有需求，再把更多 OpenRouter 专属参数通过 CLI 暴露出来。

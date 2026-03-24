@@ -11,7 +11,7 @@ import os
 import subprocess
 import sys
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any, Dict, List, Optional
 from urllib.parse import urlparse
 
 from providers import (
@@ -210,23 +210,28 @@ def encode_image(image_path: str) -> str:
         return base64.b64encode(file.read()).decode("utf-8")
 
 
-def build_image_input(image_path: Optional[str]) -> Optional[Dict[str, str]]:
-    """构造 provider 可复用的图片输入结构"""
-    if not image_path:
-        return None
+def build_image_inputs(image_paths: Optional[List[str]]) -> List[Dict[str, str]]:
+    """将多张图片路径列表构造为 provider 可复用的图片输入结构列表"""
+    if not image_paths:
+        return []
 
-    if not os.path.exists(image_path):
-        print(f"错误: 图片不存在: {image_path}", file=sys.stderr)
-        sys.exit(1)
+    result = []
+    for image_path in image_paths:
+        if not os.path.exists(image_path):
+            print(f"错误: 图片不存在: {image_path}", file=sys.stderr)
+            sys.exit(1)
 
-    mime_type = detect_mime_type(image_path)
-    image_b64 = encode_image(image_path)
-    data_url = f"data:{mime_type};base64,{image_b64}"
-    return {
-        "mime_type": mime_type,
-        "base64": image_b64,
-        "data_url": data_url,
-    }
+        mime_type = detect_mime_type(image_path)
+        image_b64 = encode_image(image_path)
+        data_url = f"data:{mime_type};base64,{image_b64}"
+        result.append(
+            {
+                "mime_type": mime_type,
+                "base64": image_b64,
+                "data_url": data_url,
+            }
+        )
+    return result
 
 
 def decode_data_url(data_url: str) -> bytes:
@@ -257,7 +262,7 @@ def decode_image_result(image_data: str, proxies: Optional[Dict[str, str]]) -> b
 
 def generate_image(
     prompt: str,
-    image_path: str = None,
+    image_paths: Optional[List[str]] = None,
     output: str = "output.png",
     size: Optional[str] = None,
     aspect_ratio: Optional[str] = None,
@@ -269,19 +274,20 @@ def generate_image(
     proxies = build_proxies(config)
     endpoint = resolve_provider_endpoint(config)
     provider_type = config["provider_type"]
-    image_input = build_image_input(image_path)
+    image_inputs = build_image_inputs(image_paths)
 
     headers = {
         "Authorization": f"Bearer {config['api_key']}",
         "Content-Type": "application/json",
     }
-    payload = build_provider_request(config, prompt, image_input)
+    payload = build_provider_request(config, prompt, image_inputs)
 
     print("正在生成图片...")
     print(f"Provider: {provider_type}")
     print(f"Prompt: {prompt}")
-    if image_path:
-        print(f"参考图: {image_path}")
+    if image_paths:
+        for idx, p in enumerate(image_paths, 1):
+            print(f"参考图 {idx}: {p}")
     if provider_type == "openrouter":
         image_config = payload.get("image_config")
         if image_config:
@@ -335,7 +341,7 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description="使用 Nano Banana 系列模型生成图片")
     parser.add_argument("--prompt", "-p", required=True, help="图像描述文字")
-    parser.add_argument("--image", "-i", help="参考图片路径（可选）")
+    parser.add_argument("--image", "-i", nargs="+", help="参考图片路径，支持传入多张（空格分隔）")
     parser.add_argument("--output", "-o", default="output.png", help="输出文件名")
     parser.add_argument("--size", help="OpenRouter image_size，可选值: 0.5K / 1K / 2K / 4K")
     parser.add_argument("--aspect-ratio", help="OpenRouter aspect_ratio，例如 16:9 / 1:1 / 9:16")

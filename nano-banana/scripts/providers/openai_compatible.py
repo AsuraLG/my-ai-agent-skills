@@ -1,14 +1,14 @@
 """OpenAI-compatible provider adapter."""
 
-from typing import Any, Dict, Optional
+from typing import Any, Dict, List, Optional
 
 
 def build_openai_compatible_request(
-    config: Dict[str, Any], prompt: str, image_input: Optional[Dict[str, str]]
+    config: Dict[str, Any], prompt: str, image_inputs: List[Dict[str, str]]
 ) -> Dict[str, Any]:
     content = []
 
-    if image_input:
+    for image_input in image_inputs:
         content.append(
             {
                 "type": "image_url",
