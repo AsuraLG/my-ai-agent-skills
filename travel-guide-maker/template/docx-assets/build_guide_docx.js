@@ -208,14 +208,14 @@ function loadGalleryImages(galleryImagePaths) {
 function buildGuideDoc(configPath) {
   const guide = loadGuideConfig(configPath);
   ensureFileExists(guide.markdownPath, 'Markdown');
-  ensureFileExists(guide.routeMapPath, 'Route map');
   ensureFileExists(guide.noteSummaryPath, 'Note summary');
   ensureFileExists(guide.imageManifestPath, 'Image manifest');
 
   const markdown = fs.readFileSync(guide.markdownPath, 'utf8');
   const notes = readJson(guide.noteSummaryPath);
   const manifest = readJson(guide.imageManifestPath);
-  const routeImage = fs.readFileSync(guide.routeMapPath);
+  const hasRouteMap = guide.routeMapPath && fs.existsSync(guide.routeMapPath);
+  const routeImage = hasRouteMap ? fs.readFileSync(guide.routeMapPath) : null;
   const coverGalleryImages = loadGalleryImages(guide.galleryImagePaths);
 
   const children = [];
@@ -249,21 +249,23 @@ function buildGuideDoc(configPath) {
     spacing: { after: 220 },
     children: [new TextRun({ text: `整理时间：${guide.date}`, size: 20, color: '7A7A7A' })],
   }));
-  children.push(new Paragraph({
-    alignment: AlignmentType.CENTER,
-    spacing: { after: 220 },
-    children: [new TextRun({ text: '示意路线图', size: 20, bold: true, color: '345B84' })],
-  }));
-  children.push(new Paragraph({
-    alignment: AlignmentType.CENTER,
-    spacing: { after: 220 },
-    children: [new ImageRun({
-      type: 'png',
-      data: routeImage,
-      transformation: { width: 440, height: 640 },
-      altText: { title: '示意路线图', description: '示意路线图', name: '示意路线图' },
-    })],
-  }));
+  if (hasRouteMap) {
+    children.push(new Paragraph({
+      alignment: AlignmentType.CENTER,
+      spacing: { after: 220 },
+      children: [new TextRun({ text: '示意路线图', size: 20, bold: true, color: '345B84' })],
+    }));
+    children.push(new Paragraph({
+      alignment: AlignmentType.CENTER,
+      spacing: { after: 220 },
+      children: [new ImageRun({
+        type: 'png',
+        data: routeImage,
+        transformation: { width: 440, height: 640 },
+        altText: { title: '示意路线图', description: '示意路线图', name: '示意路线图' },
+      })],
+    }));
+  }
   children.push(new Paragraph({
     alignment: AlignmentType.CENTER,
     spacing: { after: 240 },

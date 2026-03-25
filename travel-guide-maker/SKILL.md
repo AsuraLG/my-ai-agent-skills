@@ -82,28 +82,27 @@ node "$SKILL_ROOT/scripts/init-guide.js" "$DEST" <目的地名称>
 ```bash
 cd "$XHS_ROOT"
 .venv/bin/python scripts/cli.py search-feeds \
-  --keyword "<关键词>" --sort-by "最多点赞" --note-type "图文"
+  --keyword "<关键词>" --sort-by "最多点赞"
 ```
+
+> ⚠️ 注意：`--sort-by` 与 `--note-type` 同时使用时会返回空结果，不要同时使用。
 
 搜索结束后汇总所有轮次结果（按 likedCount 降序取前 20），保存到 `raw-search-snapshots/selected-feeds.json`。
 
-### A-3 获取笔记详情和图片
+### A-3 获取笔记详情
 
 对 `selected-feeds.json` 中每篇笔记（每篇间隔 2-3 秒）：
 
 ```bash
 cd "$XHS_ROOT"
 
-# 获取详情
+# 获取详情（输出重定向保存）
 .venv/bin/python scripts/cli.py get-feed-detail \
   --feed-id <FEED_ID> --xsec-token <XSEC_TOKEN> \
   > "$DEST/note-details/<FEED_ID>.json"
-
-# 下载图片（从详情的 imageList 提取 urlDefault）
-.venv/bin/python scripts/image_downloader.py \
-  --feed-id <FEED_ID> --image-urls <URL1> <URL2> \
-  --output-dir "$DEST/images/<FEED_ID>"
 ```
+
+> ℹ️ **关于图片**：`transform.js` 在没有图片时依然可以正常生成 `image-manifest.json`（`image_count_downloaded` 为 0），不影响文档构建。
 
 ### A-4 转换为标准中间产物
 
@@ -133,9 +132,9 @@ node "$SKILL_ROOT/scripts/adapters/xhs/transform.js" "$DEST"
 
 请按以下步骤执行：
 1. 用 init-guide.js 初始化项目目录
-2. 用 xiaohongshu-skills 执行多轮渐进式搜索（目标 20 篇，阈值 500→100，逐步减关键词，每轮间隔 5 分钟）
-3. 逐一获取详情（get-feed-detail）保存到 note-details/，下载图片到 images/<feed_id>/
-4. 运行 scripts/adapters/xhs/transform.js 生成中间产物
+2. 用 xiaohongshu-skills 执行多轮渐进式搜索（目标 20 篇，不加 --sort-by/--note-type 参数，逐步减关键词，每轮间隔 5 分钟）
+3. 逐一获取详情（get-feed-detail）保存到 note-details/；每篇获取后验证 JSON 包含 note.imageList 字段
+4. 运行 scripts/adapters/xhs/transform.js 生成中间产物；验证 note-summary.json 条数与笔记数一致
 5. 根据笔记内容撰写 markdown/guide.md（参考 references/guide-template.md）
 6. 路线图我会自行放入 route-map/route-map.png，确认后再构建
 7. 运行 build_guide_docx.js 构建 Word 文档
@@ -158,7 +157,7 @@ node "$SKILL_ROOT/scripts/adapters/xhs/transform.js" "$DEST"
 ```
 ✓ guide.config.json          （init-guide.js 已自动生成）
 ✓ markdown/guide.md          （见 references/guide-template.md）
-✓ route-map/route-map.png    （建议截图自地图 App，竖向 2:3，PNG）
+○ route-map/route-map.png    （可选，建议截图自地图 App，竖向 2:3，PNG；不提供则跳过路线图页）
 ✓ mappings/note-summary.json
 ✓ mappings/image-manifest.json
 ```
@@ -179,11 +178,25 @@ node docx-assets/build_guide_pandoc.js
 
 ---
 
+## 关键验证检查点
+
+每个阶段完成后必须验证，发现异常立即停止并排查，不要继续推进：
+
+| 阶段 | 验证命令 | 预期结果 |
+|------|---------|----------|
+| A-2 搜索后 | `cat raw-search-snapshots/selected-feeds.json \| python3 -c "import json,sys; d=json.load(sys.stdin); print(len(d), '篇')"` | ≥ 10 篇（目标 20 篇）|
+| A-3 获取详情后 | `ls note-details/ \| wc -l` | 与 selected-feeds.json 条数一致 |
+| A-3 详情结构 | `python3 -c "import json; d=json.load(open('note-details/<ID>.json')); print(list(d.keys()), len(d['note']['imageList']), '张图')"` | 顶层含 `note`/`comments`，imageList 有内容 |
+| A-4 转换后 | `cat mappings/note-summary.json \| python3 -c "import json,sys; d=json.load(sys.stdin); print(len(d), '条')"` | 与笔记数一致，无 0 条异常 |
+| 构建后 | `ls -lh docx-assets/output.docx` | 文件存在且大小 > 50KB |
+
+---
+
 ## 常见问题
 
 | 问题 | 原因 | 解决 |
 |------|------|------|
 | `Cannot find module 'docx'` | 缺少全局 npm 包 | `npm install -g docx` |
-| `Route map not found` | 路线图未放置 | 放入 `route-map/route-map.png` |
+| 搜索返回空结果 | `--sort-by` 与 `--note-type` 同时使用冲突 | 去掉这两个参数，使用默认综合排序 |
 | 图片附录为空但无报错 | 路径是相对路径 | 改为绝对路径（`/Users/...`）|
 | 附录显示 `点赞 2.8万` | 互动数未转换 | `likedCount` 须为整数 `28000` |
