@@ -8,12 +8,12 @@ import argparse
 import base64
 import json
 import os
-import subprocess
 import sys
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 from urllib.parse import urlparse
 
+from _runtime import ensure_skill_venv
 from providers import (
     build_provider_request,
     parse_provider_image_response,
@@ -21,59 +21,7 @@ from providers import (
     resolve_provider_type,
 )
 
-SCRIPT_DIR = Path(__file__).resolve().parent
-SKILL_ROOT = SCRIPT_DIR.parent
-VENV_DIR = SKILL_ROOT / ".venv"
-VENV_PYTHON = VENV_DIR / "bin" / "python"
-PYPROJECT_FILE = SKILL_ROOT / "pyproject.toml"
 requests = None
-
-
-def find_command(command: str) -> Optional[str]:
-    for directory in os.environ.get("PATH", "").split(os.pathsep):
-        candidate = Path(directory) / command
-        if candidate.is_file() and os.access(candidate, os.X_OK):
-            return str(candidate)
-    return None
-
-
-def sync_dependencies() -> None:
-    """使用 uv sync 同步 skill 依赖"""
-    if not PYPROJECT_FILE.exists():
-        print(f"错误: 未找到项目文件: {PYPROJECT_FILE}", file=sys.stderr)
-        sys.exit(1)
-
-    subprocess.run(["uv", "sync"], check=True, cwd=str(SKILL_ROOT))
-
-
-def ensure_venv() -> None:
-    """确保 skill 根目录下的 uv 虚拟环境和依赖已就绪"""
-    if VENV_PYTHON.exists():
-        return
-
-    if not find_command("uv"):
-        print("错误: 未找到 uv，请先安装 uv 后再使用 nano-banana skill", file=sys.stderr)
-        print("可参考: brew install uv", file=sys.stderr)
-        sys.exit(1)
-
-    print("检测到 nano-banana 虚拟环境不存在，正在初始化...")
-
-    try:
-        sync_dependencies()
-    except subprocess.CalledProcessError as exc:
-        print(f"错误: 初始化虚拟环境失败: {exc}", file=sys.stderr)
-        sys.exit(1)
-
-
-def reexec_in_venv() -> None:
-    """确保脚本始终在 skill 自身虚拟环境中执行"""
-    ensure_venv()
-
-    current_python = Path(sys.executable).resolve()
-    if current_python == VENV_PYTHON.resolve():
-        return
-
-    os.execv(str(VENV_PYTHON), [str(VENV_PYTHON), str(Path(__file__).resolve()), *sys.argv[1:]])
 
 
 def parse_bool(value: Any) -> bool:
@@ -333,7 +281,7 @@ def generate_image(
 
 
 if __name__ == "__main__":
-    reexec_in_venv()
+    ensure_skill_venv(__file__)
 
     import requests as requests_module
 
