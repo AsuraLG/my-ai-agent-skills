@@ -1,0 +1,29 @@
+{
+  "skill_name": "disable-mcp-servers-in-project",
+  "evals": [
+    {
+      "id": 1,
+      "eval_name": "basic-disable-single-server",
+      "prompt": "在当前项目中禁用 java-jdtls 这个MCP服务器",
+      "expected_output": "成功禁用java-jdtls服务器，显示修改前后的对比",
+      "files": [],
+      "assertions": []
+    },
+    {
+      "id": 2,
+      "eval_name": "disable-multiple-servers",
+      "prompt": "禁用这些mcp服务器：octo mafka lion",
+      "expected_output": "成功禁用三个服务器，显示新增的服务器列表",
+      "files": [],
+      "assertions": []
+    },
+    {
+      "id": 3,
+      "eval_name": "disable-with-existing-servers",
+      "prompt": "在当前项目中禁用 mdp-agent 和 java-jdtls 这两个服务器",
+      "expected_output": "正确处理已存在的服务器，不重复添加，显示已存在的服务器列表",
+      "files": [],
+      "assertions": []
+    }
+  ]
+}
