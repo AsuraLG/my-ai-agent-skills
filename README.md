@@ -11,6 +11,7 @@ AI Agent 自用 skill 合集。
 | `wechat-article-fetch` | 搜索并抓取微信公众号文章原始内容，提取标题、原始链接、公众号信息与正文文本。 | 网络搜集&本人修改 |
 | `travel-guide-maker` | 将旅游笔记原始素材（小红书或手动整理）加工成结构化旅游攻略，输出为带目录、路线图、来源附录的 Word 文档（.docx）。支持与 xiaohongshu-skills 联动实现全流程自动化。 | 本人开发 |
 | `hv-analysis` | 横纵分析法深度研究 Skill，自动联网收集信息，纵向追时间深度 + 横向追竞争广度，最终输出排版精美的 PDF 研究报告。 | 网络搜集&本人修改 |
+| `disable-mcp-servers-in-project` | 在项目下禁用某些MCP服务器，仅适用于claude code | 本人开发 |
 
 ## 致谢
 
