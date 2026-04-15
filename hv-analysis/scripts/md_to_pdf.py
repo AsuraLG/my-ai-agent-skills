@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """
 横纵分析法报告 Markdown → PDF 转换脚本 (WeasyPrint版)
 用法: python md_to_pdf.py input.md output.pdf [--title "报告标题"] [--author "作者"]
@@ -11,6 +10,9 @@ import os
 import re
 import argparse
 import markdown
+from _runtime import ensure_skill_venv
+
+ensure_skill_venv(__file__)
 
 # ── CSS 样式 ──
 CSS_TEMPLATE = """

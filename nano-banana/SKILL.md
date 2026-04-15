@@ -9,10 +9,11 @@ description: 使用 Google Nano Banana系列模型生成图片。当用户要求
 
 当用户要求生成图片时，使用 `scripts/generate_image.py` 脚本。
 
-skill 首次运行时会自动检查 skill 根目录下的 `.venv` 是否存在：
-- 如果不存在，会自动使用 `uv sync` 创建虚拟环境并安装 `pyproject.toml` 中声明的依赖
-- 如果已存在，后续会直接复用该虚拟环境
-- 脚本会自动切换到这个虚拟环境中执行，无需手动 `source`
+skill 使用 `uv project` 管理依赖和虚拟环境：
+- 依赖声明写在 skill 根目录下的 `pyproject.toml`
+- 锁定结果写在 skill 根目录下的 `uv.lock`
+- 实际运行时统一使用 skill 根目录下的 `.venv`
+- 脚本不会自动切换虚拟环境；如果当前解释器不是这个 skill 自己的 `.venv`，会直接退出并提示正确命令
 
 ### 环境配置
 
@@ -110,40 +111,51 @@ OpenRouter 当前会：
 
 skill 根目录下维护 `pyproject.toml`，所有 Python 依赖都应写在这里。
 
-当前初始化流程会：
-1. 检查 skill 根目录下是否存在 `.venv`
-2. 若不存在，执行 `uv sync`
-3. 使用 `<skill-root>/.venv/bin/python` 重新执行当前脚本
+推荐初始化命令：
+```bash
+cd /path/to/nano-banana
+uv sync
+```
+
+如果不能切换到 skill 根目录，也可以显式指定项目根：
+```bash
+uv sync --project /path/to/nano-banana
+```
 
 ### 使用方法
 
 推荐直接执行：
 ```bash
-python scripts/generate_image.py --prompt "描述文字" [--image /path/to/image1.png /path/to/image2.png] [--output output.png] [--size 1024x1024] [--aspect-ratio 16:9]
+uv run --project /path/to/nano-banana python /path/to/nano-banana/scripts/generate_image.py --prompt "描述文字" [--image /path/to/image1.png /path/to/image2.png] [--output output.png] [--size 1K] [--aspect-ratio 16:9]
+```
+
+如果当前 shell 已经位于 skill 根目录，也可以简写为：
+```bash
+uv run python scripts/generate_image.py --prompt "描述文字" [--image /path/to/image1.png /path/to/image2.png] [--output output.png] [--size 1K] [--aspect-ratio 16:9]
 ```
 
 参数说明：
 - `--prompt`: 必填，图像描述
 - `--image`: 可选，参考图片路径，支持传入多张（空格分隔），例如 `--image a.png b.png c.png`
 - `--output`: 可选，输出文件名（默认 `output.png`）
-- `--size`: 可选，输出尺寸，例如 `1024x1024`；当前仅在 `provider_type=openrouter` 时有值才透传
+- `--size`: 可选，OpenRouter `image_size`，例如 `1K`；当前仅在 `provider_type=openrouter` 时有值才透传
 - `--aspect-ratio`: 可选，宽高比，例如 `16:9`；当前仅在 `provider_type=openrouter` 时有值才透传
 
 ### 示例
 
 **纯文字生成：**
 ```bash
-python scripts/generate_image.py --prompt "一只可爱的橘猫在阳光下打盹"
+uv run --project /path/to/nano-banana python /path/to/nano-banana/scripts/generate_image.py --prompt "一只可爱的橘猫在阳光下打盹"
 ```
 
 **图文生成（单张参考图+描述）：**
 ```bash
-python scripts/generate_image.py --prompt "把这只猫变成卡通风格" --image /path/to/cat.png
+uv run --project /path/to/nano-banana python /path/to/nano-banana/scripts/generate_image.py --prompt "把这只猫变成卡通风格" --image /path/to/cat.png
 ```
 
 **图文生成（多张参考图+描述）：**
 ```bash
-python scripts/generate_image.py --prompt "融合这两张图片的风格，生成新的场景" --image /path/to/img1.png /path/to/img2.png
+uv run --project /path/to/nano-banana python /path/to/nano-banana/scripts/generate_image.py --prompt "融合这两张图片的风格，生成新的场景" --image /path/to/img1.png /path/to/img2.png
 ```
 
 **手动预初始化环境（可选）：**

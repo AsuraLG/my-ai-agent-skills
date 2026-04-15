@@ -12,9 +12,14 @@
   - 不要使用 `dict | None`、`str | None` 这类 Python 3.10+ 类型语法。
   - 优先使用 `Optional[...]`、`Dict[...]`、`List[...]`。
 - 依赖管理使用 `uv`。
-- 运行脚本时使用 `python`，不要假设有 `python3.10+`。
+- 不要依赖 `source .venv/bin/activate`。
+- 自动调用和手工调用都应使用 `uv run --project <skill-root> python <skill-root>/scripts/...`。
+- 脚本必须校验自己运行在 skill 根目录下的 `.venv` 中，不允许自动 `uv sync` 后重进虚拟环境。
 
 ## 当前代码结构
+- `scripts/_runtime.py`
+  - skill 运行时约束。
+  - 负责校验当前解释器是否就是 `<skill-root>/.venv`。
 - `scripts/generate_image.py`
   - 通用流程层。
   - 负责 CLI 参数解析、配置加载、代理构造、图片读取与编码、响应落盘、错误处理。
@@ -105,7 +110,7 @@
 ## 测试与验证
 - 每次改完 Python 代码，至少做静态语法检查：
   ```bash
-  python -m py_compile scripts/generate_image.py scripts/providers/__init__.py scripts/providers/openrouter.py scripts/providers/openai_compatible.py
+  uv run python -m py_compile scripts/_runtime.py scripts/generate_image.py scripts/providers/__init__.py scripts/providers/openrouter.py scripts/providers/openai_compatible.py
   ```
 - 如果改了 JSON 示例，校验 JSON 合法性。
 - 如果改了 OpenRouter 参数行为，优先验证：
