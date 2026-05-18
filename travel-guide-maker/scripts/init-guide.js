@@ -81,13 +81,21 @@ let guideMd = fs.readFileSync(guideMdPath, 'utf8');
 guideMd = guideMd.replace('YYYY-MM-DD', today);
 fs.writeFileSync(guideMdPath, guideMd, 'utf8');
 
+// 创建搜索流程所需的额外目录
+fs.mkdirSync(path.join(absDestDir, 'note-details'), { recursive: true });
+fs.mkdirSync(path.join(absDestDir, 'raw-search-snapshots'), { recursive: true });
+fs.mkdirSync(path.join(absDestDir, 'images'), { recursive: true });
+
 console.log('✓ 项目初始化完成');
 console.log('');
 console.log('目录结构：');
 console.log(`  ${absDestDir}/`);
-console.log('  ├── guide.config.json         ← 已预填目的地信息，可继续编辑');
-console.log('  ├── markdown/guide.md         ← 攻略正文模板，待填充内容');
+console.log('  ├── guide.config.json         ← 已预填目的地信息');
+console.log('  ├── markdown/guide.md         ← 攻略正文模板，待填充');
 console.log('  ├── mappings/                 ← 待生成 note-summary.json / image-manifest.json');
+console.log('  ├── note-details/             ← 笔记详情 JSON（搜索流程自动填充）');
+console.log('  ├── raw-search-snapshots/     ← 搜索快照（搜索流程自动填充）');
+console.log('  ├── images/                   ← 笔记图片（可选）');
 console.log('  ├── route-map/                ← 待放入路线图 PNG');
 console.log('  └── docx-assets/             ← 构建脚本已就绪');
 console.log('');
