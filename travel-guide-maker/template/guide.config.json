@@ -1,11 +1,13 @@
 {
   "slug": "my-destination",
   "destinationName": "目的地名称",
-  "title": "目的地两日旅游攻略",
-  "subtitle": "小红书高赞笔记整理版",
+  "days": 2,
+  "sourceType": "manual",
+  "title": "目的地旅游攻略",
+  "subtitle": "旅游攻略整理版",
   "coverDescription": "含路线图、正文攻略、来源摘要与图片映射附录",
-  "coverTagline": "适合短途出行的出行参考",
-  "date": "2026-03-24",
+  "coverTagline": "出行参考",
+  "date": "2026-01-01",
   "markdownPath": "markdown/guide.md",
   "routeMapPath": "route-map/route-map.png",
   "noteSummaryPath": "mappings/note-summary.json",
@@ -14,6 +16,7 @@
   "galleryImagePaths": [],
   "docx": {
     "headerText": "目的地旅游攻略｜整理版",
-    "footerText": "整理自小红书公开高赞笔记"
+    "footerText": "整理自公开资料",
+    "routeMapDisclaimer": "路线图仅用于理解行程节奏与片区关系，具体动线请结合现场交通与天气灵活调整。"
   }
 }

@@ -40,7 +40,11 @@ function loadGuideConfig(configPath) {
     imageManifestPath: resolveFromRoot(rootDir, config.imageManifestPath),
     outputDocxPath: resolveFromRoot(rootDir, config.outputDocxPath),
     galleryImagePaths: (config.galleryImagePaths || []).map((item) => resolveFromRoot(rootDir, item)),
-    docx: config.docx || {},
+    docx: {
+      headerText: (config.docx || {}).headerText || '',
+      footerText: (config.docx || {}).footerText || '',
+      routeMapDisclaimer: (config.docx || {}).routeMapDisclaimer || '',
+    },
   };
 }
 
@@ -266,11 +270,13 @@ function buildGuideDoc(configPath) {
       })],
     }));
   }
-  children.push(new Paragraph({
-    alignment: AlignmentType.CENTER,
-    spacing: { after: 240 },
-    children: [new TextRun({ text: '路线图仅用于理解行程节奏与片区关系，具体动线请结合现场交通与天气灵活调整。', italics: true, size: 18, color: '666666' })],
-  }));
+  if (guide.docx.routeMapDisclaimer) {
+    children.push(new Paragraph({
+      alignment: AlignmentType.CENTER,
+      spacing: { after: 240 },
+      children: [new TextRun({ text: guide.docx.routeMapDisclaimer, italics: true, size: 18, color: '666666' })],
+    }));
+  }
   children.push(new Paragraph({ children: [new PageBreak()] }));
   children.push(new Paragraph({
     heading: HeadingLevel.HEADING_1,
@@ -429,7 +435,7 @@ function buildGuideDoc(configPath) {
             border: { top: { style: BorderStyle.SINGLE, size: 2, color: 'E5E7EB', space: 1 } },
             spacing: { before: 40 },
             children: [
-              new TextRun({ text: guide.docx.footerText || '整理自公开高赞笔记', color: '7A7A7A', size: 17 }),
+              new TextRun({ text: guide.docx.footerText || '整理自公开资料', color: '7A7A7A', size: 17 }),
               new TextRun('\t'),
               new TextRun({ text: '第 ', color: '7A7A7A', size: 17 }),
               new TextRun({ children: [PageNumber.CURRENT], color: '7A7A7A', size: 17 }),

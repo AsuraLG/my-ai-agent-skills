@@ -29,6 +29,9 @@ function loadGuideConfig(configPath) {
     noteSummaryPath: resolveFromRoot(rootDir, config.noteSummaryPath),
     imageManifestPath: resolveFromRoot(rootDir, config.imageManifestPath),
     outputDocxPath: resolveFromRoot(rootDir, config.outputDocxPath),
+    docx: {
+      routeMapDisclaimer: (config.docx || {}).routeMapDisclaimer || '',
+    },
   };
 }
 
@@ -110,7 +113,7 @@ const combined = [
   '',
   `![示意路线图](${guide.routeMapPath})`,
   '',
-  '> 注：路线图为示意路线，游玩前请以现场交通与景区信息为准。',
+  guide.docx.routeMapDisclaimer ? `> ${guide.docx.routeMapDisclaimer}` : '',
   '',
   appendix,
 ].join('\n');
