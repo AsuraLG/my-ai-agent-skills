@@ -42,14 +42,14 @@ done
 
 ### DEST（项目目录）
 
-由用户指定或从 prompt 中提取。
+由 `init-guide.js` 自动确定。默认为 `<CWD>/travel-guide`，可通过 `--dest` 参数指定其他路径。init 完成后从输出 JSON 的 `dest` 字段获取实际路径，后续步骤使用该值作为 `$DEST`。
 
 ### 定位结果示例
 
 ```
 SKILL_ROOT=<动态定位>
 XHS_ROOT=<动态定位>
-DEST=<用户指定>
+DEST=<init-guide.js 输出的 dest 字段>
 ```
 
 ---
@@ -86,17 +86,20 @@ node "$SKILL_ROOT/scripts/workflow.js" skip <dest-dir> <phase> --reason "<reason
 
 ## 用户确认机制
 
-### ⚠️ 强制确认点
+### 确认工具选择
 
-在以下节点，**必须使用 `AskUserQuestion` 工具**向用户提问。禁止用纯文本提问替代，禁止跳过。
+所有需要向用户确认的节点，优先使用 `AskUserQuestion` 工具（提供结构化选项，体验更好）。如果当前环境不支持 `AskUserQuestion`（非 Claude Code 环境），则回退到常规文本提问方式，直接向用户描述选项并等待回复。
+
+以下各步骤中提到"向用户确认"时，均遵循此规则，不再逐一说明。
 
 | 确认点 | 触发时机 | 选项设计 |
 |--------|---------|---------|
-| 断点续跑确认 | 检测到已有 `workflow-state.json` 时 | "从断点继续（当前在 X 阶段）" / "重新开始（清除已有进度）" |
+| 初始化参数确认 | 调用 `init-guide.js` 前 | "行程几天？（默认 2）" / "素材来源？(小红书搜索 / 手动提供 / 其他平台)" |
+| 断点续跑确认 | `init-guide.js` 输出 `status: "resumable"` 时 | "从断点继续（当前在 X 阶段）" / "重新开始（清除已有进度）" |
 | 关键词确认 | KEYWORDS_CONFIRM 阶段 | 展示构建好的关键词列表，"确认使用这组关键词" / "我要修改关键词" |
-| 跳过搜索确认 | SEARCH 阶段检测到 xiaohongshu-skills 不可用 | "跳过搜索，我自行准备原始素材" / "中止本次流程" |
+| 跳过搜索确认 | KEYWORDS_CONFIRM 阶段检测到 xiaohongshu-skills 不可用 | "跳过搜索，我自行准备原始素材" / "中止本次流程" |
 | 搜索完成确认 | SEARCH_CONFIRM 阶段 | 展示搜索结果摘要，"确认，进入详情获取" / "继续搜索更多" / "调整关键词重新搜索" |
-| 跳过详情获取确认 | FETCH_DETAILS 阶段检测到 xiaohongshu-skills 不可用 | "跳过，我自行准备素材" / "中止本次流程" |
+| 素材就绪确认 | TRANSFORM 阶段，搜索和详情获取被跳过时 | "note-details/ 或 mappings/ 中已有数据，继续" / "等等，我还没准备好" |
 | 文档生成前确认 | BUILD 阶段开始前 | 展示素材清单和就绪状态，"开始生成" / "等等，我还要调整" |
 | 文档评审 | REVIEW 阶段，每次构建完成后 | "满意，流程结束" / "修改表达/结构" / "补充新内容" |
 
@@ -104,39 +107,34 @@ node "$SKILL_ROOT/scripts/workflow.js" skip <dest-dir> <phase> --reason "<reason
 
 ## 流程总览
 
-### 第 0 步：启动与断点检测
+### 第 1 步：INIT — 启动与初始化
 
-每次 skill 触发时，首先检测是否存在未完成的流程：
+`init-guide.js` 统一处理目录检测、断点发现和项目初始化。
+
+**参数获取方式：** 向用户确认行程天数和素材来源类型，将用户回答作为 `--days` 和 `--source` 参数传递。`--days` 默认值为 2，`--source` 默认值为 manual。
 
 ```bash
-node "$SKILL_ROOT/scripts/workflow.js" resume "$DEST"
+node "$SKILL_ROOT/scripts/init-guide.js" <目的地名称> --days <天数> --source <xhs|manual|other>
 ```
 
-- **`resumable: true`** → 用 `AskUserQuestion` 询问用户是否断点续跑
-  - 选择"从断点继续" → 从 `resume_phase` 开始执行
-  - 选择"重新开始" → 删除 `workflow-state.json`，从头开始
-- **`resumable: false, action: start_fresh`** → 全新流程，直接开始
+> `--dest` 可选，不传时默认使用 `<CWD>/travel-guide`。`--force` 用于强制重新初始化。
 
----
+根据输出 JSON 的 `status` 字段决定后续操作：
 
-### 第 1 步：INIT — 初始化项目目录
+- **`status: "resumable"`** → 检测到未完成的流程。向用户确认：
+  - "从断点继续（当前在 X 阶段）" → 运行 `workflow.js resume "$DEST"` 获取断点详情，从 `resume_phase` 开始执行
+  - "重新开始（清除已有进度）" → 加 `--force` 重新执行 `init-guide.js`，然后按下方 `initialized` 流程处理
+
+- **`status: "initialized"`** → 初始化完成，从输出的 `dest` 字段获取 `$DEST` 路径，继续执行：
 
 ```bash
-# 校验
-node "$SKILL_ROOT/scripts/workflow.js" check "$DEST" INIT
-
-# 执行
-node "$SKILL_ROOT/scripts/init-guide.js" "$DEST" <目的地名称>
-
-# 初始化状态文件（init-guide.js 创建目录后）
+# 初始化状态文件
 node "$SKILL_ROOT/scripts/workflow.js" init "$DEST"
 
 # 推进
 node "$SKILL_ROOT/scripts/workflow.js" advance "$DEST" INIT \
-  --data '{"destination": "<目的地名称>"}'
+  --data '{"destination": "<目的地名称>", "days": <天数>, "sourceType": "<来源类型>"}'
 ```
-
-> 注意：INIT 阶段比较特殊，`workflow.js init` 在 `init-guide.js` 之后执行（需要目录先存在）。首次执行时 `check INIT` 会因为状态文件不存在而失败，这是预期行为，此时直接执行 `init-guide.js` 和 `workflow.js init` 即可。
 
 ---
 
@@ -148,7 +146,7 @@ node "$SKILL_ROOT/scripts/workflow.js" advance "$DEST" INIT \
 ls "$XHS_ROOT/SKILL.md" 2>/dev/null && echo "available" || echo "unavailable"
 ```
 
-- **不可用** → 用 `AskUserQuestion` 询问用户：
+- **不可用** → 向用户确认：
   - "跳过搜索，我自行准备原始素材" → 执行 `skip KEYWORDS_CONFIRM`（会级联跳过 SEARCH、SEARCH_CONFIRM、FETCH_DETAILS），流程跳到 TRANSFORM
   - "中止本次流程" → 停止执行，告知用户
 
@@ -158,9 +156,9 @@ ls "$XHS_ROOT/SKILL.md" 2>/dev/null && echo "available" || echo "unavailable"
 node "$SKILL_ROOT/scripts/workflow.js" check "$DEST" KEYWORDS_CONFIRM
 ```
 
-AI 根据用户 prompt 中的目的地信息构建关键词列表（按相关性从高到低排序，通常 3-5 个），然后**必须用 `AskUserQuestion` 展示关键词列表让用户确认**。
+AI 根据用户 prompt 中的目的地信息构建关键词列表（按相关性从高到低排序，通常 3-5 个），然后**向用户确认关键词列表**。
 
-用户可能要求修改，此时调整关键词后再次用 `AskUserQuestion` 确认，循环直到用户满意。
+用户可能要求修改，此时调整关键词后再次确认，循环直到用户满意。
 
 确认后推进：
 
@@ -231,7 +229,7 @@ node "$SKILL_ROOT/scripts/workflow.js" advance "$DEST" SEARCH \
 node "$SKILL_ROOT/scripts/workflow.js" check "$DEST" SEARCH_CONFIRM
 ```
 
-**必须用 `AskUserQuestion` 向用户展示搜索结果摘要**，包括：
+**向用户展示搜索结果摘要**，包括：
 - 共搜索了几轮
 - 收集到多少篇笔记
 - 笔记列表概要（标题、作者、点赞数）
@@ -291,7 +289,7 @@ node "$SKILL_ROOT/scripts/adapters/xhs/transform.js" "$DEST" --dry-run
 node "$SKILL_ROOT/scripts/adapters/xhs/transform.js" "$DEST"
 ```
 
-> 如果搜索和详情获取阶段被跳过（用户自行准备素材），此步骤需要用户确认 `note-details/` 目录中已有数据，或 `mappings/` 中已有标准格式的 JSON 文件。如果 `mappings/` 已有文件可直接跳过 transform。
+> 如果搜索和详情获取阶段被跳过（用户自行准备素材），向用户确认 `note-details/` 目录中已有数据，或 `mappings/` 中已有标准格式的 JSON 文件。如果 `mappings/` 已有文件可直接跳过 transform。
 
 转换完成后，**必须运行数据契约校验**：
 
@@ -315,7 +313,7 @@ node "$SKILL_ROOT/scripts/workflow.js" advance "$DEST" TRANSFORM
 node "$SKILL_ROOT/scripts/workflow.js" check "$DEST" WRITE_GUIDE
 ```
 
-根据 `mappings/note-summary.json` 中的笔记内容，参考 `references/guide-template.md` 的模板格式，撰写 `markdown/guide.md` 攻略正文。
+根据 `mappings/note-summary.json` 中的素材内容，参考 `references/guide-template.md` 的结构规范，在 `markdown/guide.md`（已由 init-guide.js 生成骨架）上填充攻略正文。注意根据 `guide.config.json` 中的 `sourceType` 和 `days` 调整内容措辞。
 
 完成后推进：
 
@@ -331,7 +329,7 @@ node "$SKILL_ROOT/scripts/workflow.js" advance "$DEST" WRITE_GUIDE
 node "$SKILL_ROOT/scripts/workflow.js" check "$DEST" BUILD
 ```
 
-**必须用 `AskUserQuestion` 确认素材就绪：**
+**向用户确认素材就绪：**
 
 ```
 ✓ guide.config.json          （init-guide.js 已自动生成）
@@ -371,7 +369,7 @@ node "$SKILL_ROOT/scripts/workflow.js" check "$DEST" REVIEW
 
 此阶段是一个**评审-调整-重建的循环**，直到用户满意为止。
 
-**必须用 `AskUserQuestion` 让用户评价文档**，选项：
+**向用户确认文档评价**，选项：
 - "满意，流程结束"
 - "修改表达/结构（不需要新素材）"
 - "补充新内容（需要搜索新素材）"
@@ -385,7 +383,7 @@ cd "$DEST"
 NODE_PATH="$(npm root -g)" node docx-assets/build_guide_docx.js
 ```
 
-构建后再次用 `AskUserQuestion` 评价，循环直到满意。
+构建后再次向用户确认评价，循环直到满意。
 
 #### 补充新内容
 
@@ -410,7 +408,7 @@ NODE_PATH="$(npm root -g)" node docx-assets/build_guide_docx.js
    node "$SKILL_ROOT/scripts/validate.js" "$DEST"
    ```
 5. 根据新素材补充 `markdown/guide.md`，重新构建 Word 文档
-6. 再次用 `AskUserQuestion` 评价，循环直到满意
+6. 再次向用户确认评价，循环直到满意
 
 > 如果 xiaohongshu-skills 不可用，告知用户无法自动搜索新素材，建议用户自行补充信息后选择"修改表达/结构"方式调整。
 
@@ -426,12 +424,22 @@ node "$SKILL_ROOT/scripts/workflow.js" advance "$DEST" REVIEW
 
 ## 核心数据契约
 
-> 无论走哪条路径，都必须产出这两个文件后才能构建文档。
-> 详细字段说明和示例见 `references/data-spec.md`。
+> 无论走哪条路径，都必须产出 `mappings/note-summary.json` 和 `mappings/image-manifest.json` 后才能构建文档。
 
-**`mappings/note-summary.json`** — 笔记摘要列表：每条包含 `feed_id`、`title`、`author`、`likedCount`（整数）、`collectedCount`（整数）、`commentCount`（整数）、`desc`（≤500字）、`top_comments`（数组）、`source_link`。
+**权威定义：** `$SKILL_ROOT/schemas/note-summary.schema.json` 和 `$SKILL_ROOT/schemas/image-manifest.schema.json`（JSON Schema 格式）。
 
-**`mappings/image-manifest.json`** — 图片映射列表：每条包含 `feed_id`、`title`、`image_count_downloaded`、`local_image_paths`（**绝对路径**）、`source_link`。
+**概要：**
+- **`note-summary.json`** — 素材摘要列表：每条含 `feed_id`、`title`、`author`、互动数据（整数）、`desc`（≤500字）、`top_comments`（≤3条）、`source_link`
+- **`image-manifest.json`** — 图片映射列表：每条含 `feed_id`、`title`、`image_count_downloaded`、`local_image_paths`（**绝对路径**）、`source_link`
+
+**非小红书来源的数据适配：**
+- 无互动数据 → `likedCount` / `collectedCount` / `commentCount` 填 `0`
+- 无 feed_id → 自行生成唯一 ID，如 `"manual-001"`
+- 无评论数据 → `top_comments` 填 `[]`
+- 无来源链接 → `source_link` 填 `""`
+- 图片未下载 → `image_count_downloaded: 0`，`local_image_paths: []`
+
+详细字段约束（类型、必填、长度限制等）请直接查看 schema 文件。
 
 ### 强制校验
 
@@ -441,15 +449,14 @@ TRANSFORM 阶段完成后、WRITE_GUIDE 开始前，**必须运行校验脚本**
 node "$SKILL_ROOT/scripts/validate.js" "$DEST"
 ```
 
-校验内容包括：
-- 字段类型严格检查（`likedCount` 必须是整数，不能是 `"2.8万"` 等字符串）
-- 必填字段存在性
-- `top_comments` 数组长度 ≤ 3
-- `desc` 长度 ≤ 500
+校验内容：
+- JSON Schema 结构校验（字段类型、必填、长度限制等，由 ajv 引擎执行）
+- `feed_id` 唯一性
 - `image_count_downloaded` 与 `local_image_paths` 长度一致
 - `local_image_paths` 中每个路径必须是绝对路径
-- `feed_id` 唯一性
 - `note-summary.json` 与 `image-manifest.json` 之间的 `feed_id` 交叉引用一致性
+
+> ⚠️ 首次使用本 skill 前需在 `$SKILL_ROOT` 目录执行 `npm install` 安装 ajv 依赖。
 
 **校验不通过（退出码 1）时禁止继续推进流程**，必须先修复数据问题。
 
@@ -474,7 +481,7 @@ node "$SKILL_ROOT/scripts/validate.js" "$DEST"
 
 1. 搜索和详情获取阶段被标记为 `skipped`
 2. 用户需自行准备素材，有两种方式：
-   - **直接提供标准格式 JSON**：按 `references/data-spec.md` 整理 `note-summary.json` 和 `image-manifest.json`，放入 `mappings/` 目录，TRANSFORM 阶段可跳过
+   - **直接提供标准格式 JSON**：按 `$SKILL_ROOT/schemas/` 下的 JSON Schema 整理 `note-summary.json` 和 `image-manifest.json`，放入 `mappings/` 目录，TRANSFORM 阶段可跳过
    - **提供原始详情文件**：将笔记详情 JSON 放入 `note-details/` 目录，由 `transform.js` 转换
 3. 流程从 TRANSFORM 或 WRITE_GUIDE 阶段继续
 
@@ -487,5 +494,5 @@ node "$SKILL_ROOT/scripts/validate.js" "$DEST"
 | `Cannot find module 'docx'` | 缺少全局 npm 包 | `npm install -g docx` |
 | 搜索返回空结果 | 关键词过于具体或小红书限流 | 简化关键词，等待后重试 |
 | 图片附录为空但无报错 | 路径是相对路径 | 改为绝对路径（`/Users/...`）|
-| 附录显示 `点赞 2.8万` | 互动数未转换 | `likedCount` 须为整数 `28000` |
+| 附录显示 `点赞 2.8万` | 互动数未转换 | `likedCount` 须为整数 `28000`（见 schemas/note-summary.schema.json）|
 | 流程中断后再次触发 | 上次会话意外中断 | skill 启动时自动检测断点，询问用户是否继续 |
