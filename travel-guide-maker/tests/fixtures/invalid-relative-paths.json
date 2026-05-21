@@ -1,0 +1,9 @@
+[
+  {
+    "feed_id": "abc123",
+    "title": "标题",
+    "image_count_downloaded": 1,
+    "local_image_paths": ["images/abc123/01.jpg"],
+    "source_link": ""
+  }
+]

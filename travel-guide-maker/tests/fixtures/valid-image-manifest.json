@@ -1,0 +1,16 @@
+[
+  {
+    "feed_id": "abc123",
+    "title": "测试标题",
+    "image_count_downloaded": 2,
+    "local_image_paths": ["/tmp/test/images/abc123/01.jpg", "/tmp/test/images/abc123/02.jpg"],
+    "source_link": "https://example.com/abc123"
+  },
+  {
+    "feed_id": "def456",
+    "title": "第二条",
+    "image_count_downloaded": 0,
+    "local_image_paths": [],
+    "source_link": ""
+  }
+]

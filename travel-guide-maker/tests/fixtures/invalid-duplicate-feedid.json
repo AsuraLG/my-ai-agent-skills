@@ -1,0 +1,24 @@
+[
+  {
+    "feed_id": "same-id",
+    "title": "标题A",
+    "author": "作者A",
+    "likedCount": 100,
+    "collectedCount": 50,
+    "commentCount": 10,
+    "desc": "摘要A",
+    "top_comments": [],
+    "source_link": ""
+  },
+  {
+    "feed_id": "same-id",
+    "title": "标题B",
+    "author": "作者B",
+    "likedCount": 200,
+    "collectedCount": 80,
+    "commentCount": 20,
+    "desc": "摘要B",
+    "top_comments": [],
+    "source_link": ""
+  }
+]

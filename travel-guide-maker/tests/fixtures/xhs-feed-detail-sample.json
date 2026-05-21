@@ -1,0 +1,21 @@
+{
+  "note": {
+    "noteId": "sample001",
+    "title": "测试笔记标题",
+    "desc": "这是一段测试笔记正文内容，用于验证 transform.js 的转换逻辑。",
+    "user": {
+      "nickname": "测试博主"
+    },
+    "interactInfo": {
+      "likedCount": "2.8万",
+      "collectedCount": "1.2万",
+      "commentCount": "368"
+    }
+  },
+  "comments": [
+    { "content": "好详细！已收藏", "likeCount": "520" },
+    { "content": "下次去试试", "likeCount": "180" },
+    { "content": "谢谢分享", "likeCount": "90" },
+    { "content": "低赞评论", "likeCount": "5" }
+  ]
+}

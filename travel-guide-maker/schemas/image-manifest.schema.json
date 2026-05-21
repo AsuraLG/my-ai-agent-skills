@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "image-manifest.schema.json",
+  "title": "图片映射列表",
+  "description": "攻略文档「附录｜图片映射摘要」章节的数据源。记录每个素材对应的已下载图片信息。",
+  "type": "array",
+  "minItems": 1,
+  "items": {
+    "type": "object",
+    "required": [
+      "feed_id",
+      "title",
+      "image_count_downloaded",
+      "local_image_paths",
+      "source_link"
+    ],
+    "properties": {
+      "feed_id": {
+        "type": "string",
+        "description": "与 note-summary.json 中保持一致"
+      },
+      "title": {
+        "type": "string",
+        "description": "素材标题"
+      },
+      "image_count_downloaded": {
+        "type": "integer",
+        "minimum": 0,
+        "description": "实际下载成功的图片数量"
+      },
+      "local_image_paths": {
+        "type": "array",
+        "items": { "type": "string" },
+        "description": "图片绝对路径列表；无图片时填空数组 []"
+      },
+      "source_link": {
+        "type": "string",
+        "description": "原文链接；同 note-summary.json"
+      }
+    },
+    "additionalProperties": false
+  }
+}

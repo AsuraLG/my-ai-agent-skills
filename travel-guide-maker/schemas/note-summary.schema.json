@@ -1,0 +1,67 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "note-summary.schema.json",
+  "title": "素材摘要列表",
+  "description": "攻略文档「附录｜来源摘要」章节的数据源。每条记录代表一个原始素材的结构化摘要。",
+  "type": "array",
+  "minItems": 1,
+  "items": {
+    "type": "object",
+    "required": [
+      "feed_id",
+      "title",
+      "author",
+      "likedCount",
+      "collectedCount",
+      "commentCount",
+      "desc",
+      "top_comments",
+      "source_link"
+    ],
+    "properties": {
+      "feed_id": {
+        "type": "string",
+        "description": "素材唯一 ID，小红书场景为 noteId，手动场景可用 manual-001 等"
+      },
+      "title": {
+        "type": "string",
+        "description": "素材标题，缺失时填「无标题笔记」"
+      },
+      "author": {
+        "type": "string",
+        "description": "素材作者，缺失时填「未知作者」"
+      },
+      "likedCount": {
+        "type": "integer",
+        "minimum": 0,
+        "description": "点赞数，必须是整数（非字符串如「2.8万」）；无数据时填 0"
+      },
+      "collectedCount": {
+        "type": "integer",
+        "minimum": 0,
+        "description": "收藏数，规则同 likedCount"
+      },
+      "commentCount": {
+        "type": "integer",
+        "minimum": 0,
+        "description": "评论数，规则同 likedCount"
+      },
+      "desc": {
+        "type": "string",
+        "maxLength": 500,
+        "description": "正文摘要，去除多余空白，不超过 500 字符"
+      },
+      "top_comments": {
+        "type": "array",
+        "items": { "type": "string" },
+        "maxItems": 3,
+        "description": "高赞评论文本，最多 3 条；无评论数据时填空数组 []"
+      },
+      "source_link": {
+        "type": "string",
+        "description": "原文链接；无来源时填空字符串"
+      }
+    },
+    "additionalProperties": false
+  }
+}
