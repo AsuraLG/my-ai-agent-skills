@@ -89,7 +89,8 @@ function buildNoteSummary(raw, xsecTokenMap) {
     .filter(Boolean);
 
   // 正文摘要：去除多余空白，截取前 500 字符
-  const desc = (note.desc || '')
+  // body 是 DOM 提取的干净正文（不含 [话题] 标记，xiaohongshu-skills 新版字段），优先使用；旧格式回退 desc
+  const desc = (note.body || note.desc || '')
     .replace(/[\r\n]+/g, ' ')
     .replace(/\s{2,}/g, ' ')
     .trim()

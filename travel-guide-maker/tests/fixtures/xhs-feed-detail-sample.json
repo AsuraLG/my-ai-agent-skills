@@ -2,7 +2,9 @@
   "note": {
     "noteId": "sample001",
     "title": "测试笔记标题",
-    "desc": "这是一段测试笔记正文内容，用于验证 transform.js 的转换逻辑。",
+    "desc": "这是一段测试笔记正文内容，用于验证 transform.js 的转换逻辑。 #旅游[话题]# #攻略[话题]#",
+    "body": "这是一段测试笔记正文内容，用于验证 transform.js 的转换逻辑。",
+    "tags": ["旅游", "攻略"],
     "user": {
       "nickname": "测试博主"
     },

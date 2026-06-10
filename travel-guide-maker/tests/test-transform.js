@@ -53,6 +53,41 @@ describe('adapters/xhs/transform.js', () => {
     assert.equal(typeof summary[0].likedCount, 'number');
   });
 
+  it('prefers clean body over desc when body exists (新版字段)', () => {
+    const dest = makeTmpDest();
+    fs.copyFileSync(
+      path.join(FIXTURES, 'xhs-feed-detail-sample.json'),
+      path.join(dest, 'note-details', 'sample001.json'),
+    );
+    runTransform(dest);
+
+    const summary = JSON.parse(fs.readFileSync(path.join(dest, 'mappings', 'note-summary.json'), 'utf8'));
+    assert.equal(summary[0].desc, '这是一段测试笔记正文内容，用于验证 transform.js 的转换逻辑。');
+    assert.ok(!summary[0].desc.includes('[话题]'), 'desc 应取自干净的 body，不含话题标记');
+  });
+
+  it('falls back to desc when body is absent (旧格式兼容)', () => {
+    const dest = makeTmpDest();
+    const detail = {
+      note: {
+        noteId: 'legacy-test',
+        title: '旧格式测试',
+        desc: '旧格式正文，没有 body 字段。',
+        user: { nickname: '作者' },
+        interactInfo: { likedCount: '10', collectedCount: '5', commentCount: '1' },
+      },
+      comments: [],
+    };
+    fs.writeFileSync(
+      path.join(dest, 'note-details', 'legacy-test.json'),
+      JSON.stringify(detail),
+    );
+    runTransform(dest);
+
+    const summary = JSON.parse(fs.readFileSync(path.join(dest, 'mappings', 'note-summary.json'), 'utf8'));
+    assert.equal(summary[0].desc, '旧格式正文，没有 body 字段。');
+  });
+
   it('extracts top 3 comments sorted by likeCount', () => {
     const dest = makeTmpDest();
     fs.copyFileSync(

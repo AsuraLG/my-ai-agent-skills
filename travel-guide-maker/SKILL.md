@@ -142,9 +142,22 @@ node "$SKILL_ROOT/scripts/workflow.js" advance "$DEST" INIT \
 
 **前置检测 xiaohongshu-skills（使用已定位的 $XHS_ROOT，如果定位阶段已确定不可用则直接进入跳过逻辑）：**
 
+分两级检测。第一级，文件存在性：
+
 ```bash
 ls "$XHS_ROOT/SKILL.md" 2>/dev/null && echo "available" || echo "unavailable"
 ```
+
+第二级，真实可用性探测（xiaohongshu-skills 依赖浏览器扩展 XHS Bridge，文件存在不代表可用）：
+
+```bash
+cd "$XHS_ROOT"
+.venv/bin/python scripts/cli.py check-login
+```
+
+- 返回 JSON（无论是否已登录）→ 可用
+- 命令报错（如 bridge/扩展未连接）→ 告知用户："xiaohongshu-skills 不可用，请确认 Chrome 已安装并启用 XHS Bridge 扩展（chrome://extensions/ → 开发者模式 → 加载已解压的扩展程序 → 选择 $XHS_ROOT/extension/ 目录），然后重试"。用户处理后可重测；用户选择不处理则按"不可用"分支走
+- 返回 `logged_in: false` → 引导用户先完成小红书登录（xiaohongshu-skills 的 xhs-auth 流程）再继续
 
 - **不可用** → 向用户确认：
   - "跳过搜索，我自行准备原始素材" → 执行 `skip KEYWORDS_CONFIRM`（会级联跳过 SEARCH、SEARCH_CONFIRM、FETCH_DETAILS），流程跳到 TRANSFORM
@@ -259,8 +272,11 @@ node "$SKILL_ROOT/scripts/workflow.js" check "$DEST" FETCH_DETAILS
 cd "$XHS_ROOT"
 .venv/bin/python scripts/cli.py get-feed-detail \
   --feed-id <FEED_ID> --xsec-token <XSEC_TOKEN> \
+  --keyword "<目的地>" \
   > "$DEST/note-details/<FEED_ID>.json"
 ```
+
+> ⚠️ `--keyword` 传本次攻略的目的地（或当篇笔记对应的搜索关键词）。该参数用于 xiaohongshu-skills 风控重试时的搜索词，不传时默认值与旅游场景不符。
 
 > ℹ️ `transform.js` 在没有图片时依然可以正常生成 `image-manifest.json`（`image_count_downloaded` 为 0），不影响文档构建。
 
@@ -400,6 +416,7 @@ NODE_PATH="$(npm root -g)" node docx-assets/build_guide_docx.js
    cd "$XHS_ROOT"
    .venv/bin/python scripts/cli.py get-feed-detail \
      --feed-id <FEED_ID> --xsec-token <XSEC_TOKEN> \
+     --keyword "<目的地>" \
      > "$DEST/note-details/<FEED_ID>.json"
    ```
 4. 重新运行 transform 和 validate，将新笔记追加到中间产物中
@@ -493,6 +510,7 @@ node "$SKILL_ROOT/scripts/validate.js" "$DEST"
 |------|------|------|
 | `Cannot find module 'docx'` | 缺少全局 npm 包 | `npm install -g docx` |
 | 搜索返回空结果 | 关键词过于具体或小红书限流 | 简化关键词，等待后重试 |
+| 搜索/详情命令报 bridge 或扩展未连接 | xiaohongshu-skills 需要浏览器扩展 | Chrome 安装并启用 XHS Bridge 扩展（加载 `$XHS_ROOT/extension/`），cli.py 会自动拉起 bridge_server |
 | 图片附录为空但无报错 | 路径是相对路径 | 改为绝对路径（`/Users/...`）|
 | 附录显示 `点赞 2.8万` | 互动数未转换 | `likedCount` 须为整数 `28000`（见 schemas/note-summary.schema.json）|
 | 流程中断后再次触发 | 上次会话意外中断 | skill 启动时自动检测断点，询问用户是否继续 |
