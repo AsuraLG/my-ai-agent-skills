@@ -6,7 +6,9 @@ description: |
   用户提到"生成旅游攻略"、"整理旅行笔记"、"出行攻略文档"、"旅游 Word 文档"时务必使用本技能。
   用户提供了笔记素材但不知道如何整理成文档时，也应主动使用本技能。
   可与 xiaohongshu-skills 协作实现从小红书搜索到最终成品的完整自动化。
-version: 2.0.0
+metadata:
+  version: v2
+  last_updated: "2026-07-02"
 ---
 
 # 旅游攻略生成 Skill

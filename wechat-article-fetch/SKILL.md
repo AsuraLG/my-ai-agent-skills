@@ -1,6 +1,9 @@
 ---
 name: wechat-article-fetch
 description: Use when the user wants to search, locate, or extract content from WeChat public account articles, including requests like 搜微信文章、获取公众号内容、微信搜索、查公众号文章正文.
+metadata:
+  version: v1
+  last_updated: "2026-07-02"
 ---
 
 # WeChat Article Fetch

@@ -1,6 +1,9 @@
 ---
 name: nano-banana
 description: 使用 Google Nano Banana系列模型生成图片。当用户要求根据描述（包括文字和图片）生成图片时，使用此 skill 调用图像生成 API。
+metadata:
+  version: v1
+  last_updated: "2026-07-02"
 ---
 
 # Nano Banana 图像生成

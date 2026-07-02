@@ -2,6 +2,9 @@
 name: disable-mcp-servers-in-project
 description: 在Claude Code项目中禁用指定的MCP服务器。当用户要求禁用某些MCP服务器时，使用此skill。此skill提供了一个现成的Python脚本，你必须执行这个脚本来完成任务，而不是自己写代码
 compatibility: Claude Code only
+metadata:
+  version: v1
+  last_updated: "2026-07-02"
 ---
 
 # 禁用项目中的MCP服务器

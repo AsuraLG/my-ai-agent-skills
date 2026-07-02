@@ -13,6 +13,9 @@ description: |
   - mentions subtitles or closed captions
   Examples that SHOULD trigger: "帮我下载这个 YouTube 视频", "把这个视频保存到本地", "下载B站视频", "extract audio from this", "download Instagram reel".
   Examples that should NOT trigger: "upload video", "edit video", "compress video", "convert video format", "analyze video content".
+metadata:
+  version: v1
+  last_updated: "2026-07-02"
 ---
 
 # yt-dlp Video Downloader
