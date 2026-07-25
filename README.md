@@ -12,6 +12,9 @@ AI Agent 自用 skill 合集。
 | `travel-guide-maker` | 将旅游笔记原始素材（小红书或手动整理）加工成结构化旅游攻略，输出为带目录、路线图、来源附录的 Word 文档（.docx）。支持与 xiaohongshu-skills 联动实现全流程自动化。 | 本人开发 |
 | `hv-analysis` | 横纵分析法深度研究 Skill，自动联网收集信息，纵向追时间深度 + 横向追竞争广度，最终输出排版精美的 PDF 研究报告。 | 网络搜集&本人修改 |
 | `disable-mcp-servers-in-project` | 在项目下禁用某些MCP服务器，仅适用于claude code | 本人开发 |
+| `kb.example` | 业务知识库 + CodeGraph 协作 skill 的**可复制模板**（非直接可用的功能 skill）：定义本地业务知识库与已配置 CodeGraph 项目索引的协作协议，支持 `kb-only`/`codegraph-only`/`hybrid` 三种模式。复制目录后按文末占位符说明替换为自己的业务信息即可使用。 | 本人开发 |
+| `github-tool-research` | 深度调研并对比 GitHub 上的多个工具/开源项目，围绕用户的取舍标准做证据分级调研，产出结论先行、手机友好的 HTML 选型报告，并支持后续迭代更新。 | 本人开发 |
+| `mermaid-beautify` | 将普通 Mermaid 图表代码美化为带主题、配色与节点分组样式的版本，输出始终保持合法 Mermaid 语法（不转 SVG/图片）。 | 本人开发 |
 
 ## 致谢
 

@@ -1,0 +1,7 @@
+{
+  "knowledgeBasePath": "__CONFIGURE_KNOWLEDGE_BASE_PATH__",
+  "codegraphProjectPath": "__CONFIGURE_CODEGRAPH_PROJECT_PATH__",
+  "codegraphEnabled": true,
+  "defaultMode": "hybrid",
+  "allowCodegraphIndexMaintenance": false
+}

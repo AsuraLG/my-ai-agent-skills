@@ -1,0 +1,322 @@
+<!--
+  工具选型报告 · HTML 骨架（起点，非模板）
+  ────────────────────────────────────────────
+  用法：
+   1. 复制这份结构，按调研主题用 artifact-design 重新配色/字体
+      （改 :root 里的 CSS 变量即可，light/dark 两套都要照顾）
+   2. 组件 class 直接复用：.verdict / .chip / .constraints / .scroll table
+      / .callout / .pm / .steps / details。语义见 references/report-structure.md
+   3. 真实内容填充，绝不用占位文字
+   4. 发布时 Artifact 工具会自动包裹 <!doctype>/<head>/<body>，
+      所以直接写页面内容，不要自己加这些标签；<title> 保留
+  下面用注释标出了七个骨架章节的位置。
+-->
+<title>【主题】选型报告</title>
+
+<style>
+  /* ============ 主题令牌：按调研主题重配这一段 ============ */
+  :root {
+    --ground: #F4F7F7; --surface: #FFFFFF; --surface-alt: #EAF0F0;
+    --ink: #142326; --ink-soft: #38504F; --muted: #5F7477;
+    --line: #D2DEDE; --line-soft: #E3ECEC;
+    --accent: #0D6B6D; --accent-soft: #E0F0EF;
+    --good: #2C7350; --good-bg: #E2F0E8;
+    --warn: #8C5B15; --warn-bg: #F7EBD9;
+    --crit: #A2332A; --crit-bg: #F8E4E1;
+    --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+    --sans: system-ui, -apple-system, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+    --sp: clamp(1rem, 4vw, 1.6rem); --radius: 3px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --ground: #0A1113; --surface: #121C1E; --surface-alt: #182427;
+      --ink: #DBE5E5; --ink-soft: #AFC2C2; --muted: #7E9497;
+      --line: #24363A; --line-soft: #1B2A2D;
+      --accent: #47ABA6; --accent-soft: #12302F;
+      --good: #63B98A; --good-bg: #142C21;
+      --warn: #D0A057; --warn-bg: #2E2314;
+      --crit: #E08279; --crit-bg: #331A17;
+    }
+  }
+  /* 视图切换按钮会在 root 上盖 data-theme，必须双向覆盖 media query */
+  :root[data-theme="light"] {
+    --ground: #F4F7F7; --surface: #FFFFFF; --surface-alt: #EAF0F0;
+    --ink: #142326; --ink-soft: #38504F; --muted: #5F7477;
+    --line: #D2DEDE; --line-soft: #E3ECEC;
+    --accent: #0D6B6D; --accent-soft: #E0F0EF;
+    --good: #2C7350; --good-bg: #E2F0E8; --warn: #8C5B15; --warn-bg: #F7EBD9;
+    --crit: #A2332A; --crit-bg: #F8E4E1;
+  }
+  :root[data-theme="dark"] {
+    --ground: #0A1113; --surface: #121C1E; --surface-alt: #182427;
+    --ink: #DBE5E5; --ink-soft: #AFC2C2; --muted: #7E9497;
+    --line: #24363A; --line-soft: #1B2A2D;
+    --accent: #47ABA6; --accent-soft: #12302F;
+    --good: #63B98A; --good-bg: #142C21; --warn: #D0A057; --warn-bg: #2E2314;
+    --crit: #E08279; --crit-bg: #331A17;
+  }
+
+  /* ============ 基础排版 ============ */
+  body { background: var(--ground); color: var(--ink); font-family: var(--sans);
+    font-size: 16px; line-height: 1.65; -webkit-text-size-adjust: 100%; overflow-x: hidden; }
+  .wrap { max-width: 46rem; margin: 0 auto; padding: var(--sp) var(--sp) 5rem;
+    display: flex; flex-direction: column; gap: 2.75rem; }
+  h1, h2, h3, h4 { text-wrap: balance; line-height: 1.25; }
+  h1 { font-size: clamp(1.65rem, 6.5vw, 2.4rem); font-weight: 660; letter-spacing: -0.025em; margin: 0; }
+  h2 { font-size: clamp(1.2rem, 4.6vw, 1.45rem); font-weight: 640; margin: 0;
+    padding-bottom: 0.5rem; border-bottom: 2px solid var(--accent); }
+  h3 { font-size: 1.05rem; font-weight: 640; margin: 0; }
+  h4 { font-size: 0.9rem; font-weight: 640; margin: 0; }
+  p { margin: 0; }
+  a { color: var(--accent); text-underline-offset: 2px; }
+  a:focus-visible, summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  code { font-family: var(--mono); font-size: 0.855em; background: var(--surface-alt);
+    border: 1px solid var(--line-soft); border-radius: var(--radius); padding: 0.08em 0.34em; word-break: break-word; }
+  .mono { font-family: var(--mono); }
+  .eyebrow { font-family: var(--mono); font-size: 0.7rem; letter-spacing: 0.14em;
+    text-transform: uppercase; color: var(--muted); margin: 0; }
+  .lede { color: var(--ink-soft); font-size: 1.02rem; }
+  .fine { font-size: 0.83rem; color: var(--muted); line-height: 1.6; }
+  strong { font-weight: 640; }
+  section { display: flex; flex-direction: column; gap: 1.1rem; }
+
+  /* ============ 结论卡片（第 1 节）============ */
+  .verdicts { display: flex; flex-direction: column; gap: 0.75rem; }
+  .verdict { background: var(--surface); border: 1px solid var(--line);
+    border-left: 4px solid var(--muted); border-radius: var(--radius);
+    padding: 1rem 1.1rem; display: flex; flex-direction: column; gap: 0.5rem; }
+  .verdict.is-pick { border-left-color: var(--good); }
+  .verdict.is-alt  { border-left-color: var(--accent); }
+  .verdict.is-keep { border-left-color: var(--warn); }
+  .verdict.is-drop { border-left-color: var(--crit); }
+  .verdict-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.5rem 0.7rem; }
+  .verdict-name { font-size: 1.12rem; font-weight: 660; letter-spacing: -0.015em; }
+
+  /* ============ 状态标签 ============ */
+  .chip { display: inline-block; font-family: var(--mono); font-size: 0.66rem;
+    letter-spacing: 0.08em; text-transform: uppercase; padding: 0.18em 0.5em;
+    border-radius: var(--radius); border: 1px solid transparent; white-space: nowrap; font-weight: 600; }
+  .chip-good { background: var(--good-bg); color: var(--good); border-color: var(--good); }
+  .chip-warn { background: var(--warn-bg); color: var(--warn); border-color: var(--warn); }
+  .chip-crit { background: var(--crit-bg); color: var(--crit); border-color: var(--crit); }
+  .chip-acc  { background: var(--accent-soft); color: var(--accent); border-color: var(--accent); }
+  .chip-flat { background: var(--surface-alt); color: var(--muted); border-color: var(--line); }
+  .chips { display: flex; flex-wrap: wrap; gap: 0.32rem; }
+
+  /* ============ 评判标尺（第 2 节）============ */
+  .constraints { list-style: none; display: flex; flex-direction: column; gap: 0.55rem; }
+  .constraints li { display: grid; grid-template-columns: 1.6rem 1fr; gap: 0.6rem; align-items: start;
+    background: var(--surface); border: 1px solid var(--line-soft); border-radius: var(--radius); padding: 0.7rem 0.85rem; }
+  .constraints .n { font-family: var(--mono); font-size: 0.72rem; color: var(--accent); font-weight: 700; padding-top: 0.18em; }
+
+  /* ============ 决策矩阵（第 3 节）============ */
+  .scroll { overflow-x: auto; border: 1px solid var(--line); border-radius: var(--radius);
+    background: var(--surface); -webkit-overflow-scrolling: touch; }
+  table { border-collapse: collapse; width: 100%; min-width: 34rem; font-size: 0.83rem; }
+  thead th { background: var(--surface-alt); font-family: var(--mono); font-size: 0.68rem;
+    letter-spacing: 0.07em; text-transform: uppercase; color: var(--muted); font-weight: 600;
+    text-align: left; padding: 0.6rem 0.7rem; border-bottom: 1px solid var(--line); white-space: nowrap; }
+  tbody td { padding: 0.6rem 0.7rem; border-bottom: 1px solid var(--line-soft); vertical-align: top; line-height: 1.5; }
+  tbody th { padding: 0.6rem 0.7rem; border-bottom: 1px solid var(--line-soft); text-align: left;
+    font-weight: 640; vertical-align: top; white-space: nowrap; }
+  tbody tr:last-child td, tbody tr:last-child th { border-bottom: none; }
+  .num { font-family: var(--mono); font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+  /* ============ 重点提示块 ============ */
+  .callout { border: 1px solid var(--line); border-left: 4px solid var(--accent);
+    background: var(--surface); border-radius: var(--radius); padding: 0.9rem 1rem;
+    display: flex; flex-direction: column; gap: 0.5rem; }
+  .callout.warn { border-left-color: var(--warn); }
+  .callout.crit { border-left-color: var(--crit); }
+  .callout.good { border-left-color: var(--good); }
+  .callout-title { font-family: var(--mono); font-size: 0.7rem; letter-spacing: 0.1em;
+    text-transform: uppercase; font-weight: 700; color: var(--accent); }
+  .callout.warn .callout-title { color: var(--warn); }
+  .callout.crit .callout-title { color: var(--crit); }
+  .callout.good .callout-title { color: var(--good); }
+  blockquote { margin: 0; padding: 0.55rem 0 0.55rem 0.9rem; border-left: 2px solid var(--line);
+    color: var(--ink-soft); font-size: 0.88rem; }
+  blockquote .src { display: block; margin-top: 0.35rem; font-family: var(--mono); font-size: 0.7rem; color: var(--muted); }
+
+  /* ============ 优缺点列表（第 4 节）============ */
+  .pm { display: flex; flex-direction: column; gap: 0.75rem; }
+  .pm ul { list-style: none; display: flex; flex-direction: column; gap: 0.35rem; }
+  .pm li { display: grid; grid-template-columns: 1rem 1fr; gap: 0.5rem; font-size: 0.88rem; line-height: 1.55; }
+  .pm .mark { font-family: var(--mono); font-weight: 700; }
+  .plus .mark { color: var(--good); }
+  .minus .mark { color: var(--crit); }
+
+  /* ============ 落地步骤（第 6 节）============ */
+  .steps { display: flex; flex-direction: column; gap: 0.9rem; counter-reset: s; }
+  .step { display: grid; grid-template-columns: 1.5rem 1fr; gap: 0.7rem; align-items: start; }
+  .step::before { counter-increment: s; content: counter(s); font-family: var(--mono);
+    font-size: 0.72rem; font-weight: 700; color: var(--surface); background: var(--accent);
+    border-radius: 50%; width: 1.5rem; height: 1.5rem; display: grid; place-items: center; margin-top: 0.1rem; }
+  .step-body { display: flex; flex-direction: column; gap: 0.5rem; min-width: 0; }
+  pre { margin: 0; background: var(--surface-alt); border: 1px solid var(--line);
+    border-radius: var(--radius); padding: 0.85rem 0.9rem; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  pre code { background: none; border: none; padding: 0; font-size: 0.78rem; line-height: 1.7; white-space: pre; }
+  .cmt { color: var(--muted); }
+
+  /* ============ 深挖折叠块 ============ */
+  details { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); }
+  summary { cursor: pointer; padding: 0.75rem 0.9rem; font-weight: 620; font-size: 0.92rem;
+    list-style: none; display: flex; align-items: center; gap: 0.55rem; }
+  summary::-webkit-details-marker { display: none; }
+  summary::before { content: "+"; font-family: var(--mono); color: var(--accent); font-weight: 700; flex: none; }
+  details[open] > summary::before { content: "\2212"; }
+  details[open] > summary { border-bottom: 1px solid var(--line-soft); }
+  .details-body { padding: 0.9rem; display: flex; flex-direction: column; gap: 0.8rem; }
+
+  ul.bul { padding-left: 1.1rem; display: flex; flex-direction: column; gap: 0.4rem; }
+  ul.bul li { line-height: 1.6; }
+  .foot { border-top: 1px solid var(--line); padding-top: 1.2rem; display: flex; flex-direction: column; gap: 0.7rem; }
+
+  /* ============ 桌面增强（≥52rem）：正文保持阅读栏，宽元素破栏铺开 ============
+     手机上这段完全不生效——单栏 + 表格横滚。
+     电脑上：① 结论卡片两列；② 加了 .wide 的元素（主要是决策矩阵）突破 46rem
+     阅读栏、相对视口居中铺开，宽表格在大屏无需横滚。原理见下方注释。 */
+  @media (min-width: 52rem) {
+    /* 结论卡片桌面两列；想让某张卡（如主推）独占一行，给它加 .span-2 */
+    .verdicts { display: grid; grid-template-columns: 1fr 1fr; gap: 0.85rem; align-items: start; }
+    .verdict.span-2 { grid-column: 1 / -1; }
+
+    /* .wide：破栏。margin-left:50% 把左边缘推到父容器(46rem 阅读栏)的水平中点，
+       再 translateX(-50%) 拉回自身宽度的一半 → 相对视口居中。
+       min(76rem, 92vw) 保证窄一点的桌面窗口也不会溢出。 */
+    .wide {
+      width: min(76rem, 92vw);
+      margin-left: 50%;
+      transform: translateX(-50%);
+    }
+    /* 破栏后表格取消最小宽，自然铺满这片更宽的空间而非强撑出横滚条；
+       列实在太多、超过 76rem 时，.scroll 的 overflow-x 仍会兜底横滚。 */
+    .wide table { min-width: 0; }
+  }
+</style>
+
+<div class="wrap">
+
+  <!-- ========== 第 1 节 · 结论先行 ========== -->
+  <header>
+    <p class="eyebrow">选型报告 · 【日期】</p>
+    <h1>【一句话说清这份报告在比什么】</h1>
+    <p class="lede">【评判标尺是什么，一句话点出决胜维度】</p>
+  </header>
+
+  <section>
+    <h2>结论先行</h2>
+    <div class="verdicts">
+      <article class="verdict is-pick">
+        <div class="verdict-head"><span class="verdict-name">【主推】</span>
+          <span class="chip chip-good">主推</span></div>
+        <p>【一句话理由：命中了用户哪条核心约束】</p>
+        <p class="fine">【代价 / 前提】</p>
+      </article>
+      <article class="verdict is-alt">
+        <div class="verdict-head"><span class="verdict-name">【备选】</span>
+          <span class="chip chip-acc">备选</span></div>
+        <p>【什么情况下选它，分水岭在哪】</p>
+      </article>
+      <article class="verdict is-drop">
+        <div class="verdict-head"><span class="verdict-name">【排除】</span>
+          <span class="chip chip-crit">不推荐</span></div>
+        <p>【一句话为什么排除，让用户知道你考虑过】</p>
+      </article>
+    </div>
+  </section>
+
+  <!-- ========== 第 2 节 · 评判标尺 ========== -->
+  <section>
+    <h2>评判标尺：你的约束</h2>
+    <ul class="constraints">
+      <li><span class="n">01</span><span><strong>【一票否决项】</strong>【说明】</span></li>
+      <li><span class="n">02</span><span><strong>【硬约束】</strong>【说明】</span></li>
+    </ul>
+  </section>
+
+  <!-- ========== 第 3 节 · 决策矩阵 ========== -->
+  <!-- .scroll 让宽表在手机上横滚；.wide 让它在电脑上破栏铺开、无需横滚。
+       任何吃宽度的元素（宽表、并排大图）都可以加 .wide。 -->
+  <section>
+    <h2>决策矩阵</h2>
+    <div class="scroll wide">
+      <table>
+        <thead><tr><th>工具</th><th>【约束1】</th><th>【约束2】</th><th>许可</th></tr></thead>
+        <tbody>
+          <tr><th>【工具】</th><td><span class="chip chip-good">【好】</span></td>
+            <td><span class="chip chip-warn">【一般】</span></td><td class="num">MIT</td></tr>
+          <tr><th>【工具】</th><td><span class="chip chip-crit">【出局】</span></td>
+            <td>—</td><td class="num">AGPL</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ========== 第 4 节 · 逐个深挖 ========== -->
+  <section>
+    <h2>【工具】</h2>
+    <div class="pm">
+      <ul class="plus">
+        <li><span class="mark">+</span><span>【具体优点，附证据】</span></li>
+      </ul>
+      <ul class="minus">
+        <li><span class="mark">−</span><span>【具体缺点，和优点一样具体】</span></li>
+      </ul>
+    </div>
+    <div class="callout warn">
+      <span class="callout-title">对你的判断</span>
+      <p>【这个工具对这个用户到底合不合适】</p>
+    </div>
+  </section>
+
+  <!-- ========== 第 5 节 · 核心专章（按主题）========== -->
+  <section>
+    <h2>核心专章：【决胜维度】</h2>
+    <div class="callout good">
+      <span class="callout-title">【关键结论】</span>
+      <blockquote>【官方文档 / 源码原文】<span class="src">【来源路径或 URL】</span></blockquote>
+    </div>
+    <details>
+      <summary>【可折叠的深挖标题】</summary>
+      <div class="details-body">
+        <p>【源码级细节】</p>
+      </div>
+    </details>
+  </section>
+
+  <!-- ========== 第 6 节 · 落地方案 ========== -->
+  <section>
+    <h2>落地方案</h2>
+    <details open>
+      <summary>路线 A · 【主推怎么做】</summary>
+      <div class="details-body">
+        <div class="steps">
+          <div class="step"><div class="step-body"><h4>【步骤】</h4>
+            <pre><code>【命令】  <span class="cmt"># 注释</span></code></pre></div></div>
+        </div>
+      </div>
+    </details>
+  </section>
+
+  <!-- ========== 第 7 节 · 风险与附录 ========== -->
+  <section>
+    <h2>风险与附录</h2>
+    <div class="callout crit">
+      <span class="callout-title">赛道风险</span>
+      <p>【star 不代表寿命 / 切换成本 / 许可证风险】</p>
+    </div>
+    <details>
+      <summary>方法与已知空白</summary>
+      <div class="details-body">
+        <ul class="bul">
+          <li><strong>【未查到的】</strong>——诚实标注，不用推断填空。</li>
+        </ul>
+      </div>
+    </details>
+    <div class="foot">
+      <p class="fine">【本报告为选型辅助，不构成安全审计；涉及公司使用时以合规要求为准】</p>
+    </div>
+  </section>
+
+</div>
