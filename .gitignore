@@ -220,3 +220,7 @@ marimo/_static/
 marimo/_lsp/
 __marimo__/
 
+# skill 开发期的调试产物、试验脚本、生成的样例文件
+# 需要留作回归基准的样本，手动挪到对应 skill 的 tests/fixtures/
+dev/*/scratch/
+
