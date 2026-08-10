@@ -106,20 +106,6 @@ D11 裁定由全新 subagent 执行 spec §10 三项验证。理由：主会话�
 
 `handoff/` 下的 skill 本体**从一开始就不含任何具体项目的信息**——那是设计约束（spec §3.3：项目形态一律靠探测得出），不是脱敏的结果。
 
-### 存在多份副本，注意分叉
-
-迁入本仓库时，源目录 `skill_handoff_dev` 按用户决定保留在 `environment` 仓库中，未删除。因此同一 skill 至少有三份：
-
-| 位置 | 状态（2026-08-10 实测） |
-| --- | --- |
-| 本仓库 `handoff/` | 最新，取自源目录 |
-| `environment` 仓库的 `skill_handoff_dev/skills/handoff/` | 与本仓库同内容 |
-| 已部署副本 | 停留在 2026-08-04 版本，`references/platforms/claude-code.md` 少一次脱敏改写 |
-
-迁入时已核对：源目录与部署副本仅此一个文件有差异，差异内容是把「用户《Git 通用规范》」泛化为「使用者的 Git 协作规范文档」，取了源目录的较新版本。
-
-**改动本 skill 后，另两份不会自动跟随。**
-
 ## 版本变更
 
 - **v1**（2026-08-04 初版，2026-08-07 最后一次内容改动）。2026-08-10 迁入本仓库时补齐 frontmatter 的 `metadata.version` 与 `last_updated`——原 frontmatter 只有 `name` 与 `description`，不符合本仓库规范。补 metadata 不改变执行行为，因此不递增版本号。

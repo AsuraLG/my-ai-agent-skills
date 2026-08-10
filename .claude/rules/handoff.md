@@ -38,5 +38,3 @@ paths:
 ## 改动后
 
 改了行为、阶段顺序、产出形态或触发条件，递增 `SKILL.md` frontmatter 的 `metadata.version` 并更新 `last_updated`，同时在 `dev/handoff/NOTES.md` 的「版本变更」记一条。
-
-注意本 skill 存在多份副本（`environment` 仓库的源目录、已部署副本），改本仓库不会自动同步过去。
