@@ -87,6 +87,21 @@ paths:
 
 **已知限制**：`/compact` 之后 path-scoped rules 不会自动重新注入，要重新读到匹配文件才 reload。只有项目根 CLAUDE.md 会重新注入。必须每次都生效的规则写根 `CLAUDE.md`。
 
+### 怎么验证 rules 生效（2026-08-11 实测确认）
+
+机制有效。读 `nano-banana/pyproject.toml` 后，Claude Code 打印出加载提示：
+
+```
+└ Loaded .claude/rules/nano-banana.md
+```
+
+随后的回答确实用上了 rule 的内容（新 provider 放 `scripts/providers/` 并在 `__init__.py` 注册、Python 下限 3.9）。
+
+验证时踩到的两个坑：
+
+1. **不要用 `/context` 验证。** path-scoped rules 不在会话启动时加载，`/context` 的 **Memory files** 列表里看不到它们——除非本次会话已经读过匹配文件。启动时列表里只有根 `CLAUDE.md` 及用户级文件，看不到 rules 是正常的，不是失败。正确做法是读一个匹配文件，看有没有打印 `Loaded .claude/rules/xxx.md`。
+2. **必须开新会话。** 会话中途新建的 instruction 文件不被当前会话拾取——建立这批 rules 的那次会话里，读匹配文件不会触发加载。instruction 文件的发现发生在会话启动时。
+
 ### 本仓库的职责边界
 
 只负责 skill 的开发与维护，不负责 skill 如何被安装、部署、分发。因此不提供同步/安装脚本，也不对使用者的目录布局做任何假设。
@@ -113,4 +128,4 @@ paths:
   | 删除 | `nano-banana/CLAUDE.md`、`wechat-article-fetch/CLAUDE.md`（内容按性质拆到 rules 与 NOTES） |
   | 删除 | 根 `package-lock.json`（空壳孤儿文件，无对应 `package.json`，2026-03-25 误提交） |
 
-  **待验证**：path-scoped rules 与嵌套 CLAUDE.md 的加载行为，在建立它们的那次会话中未能观察到注入。推测原因是 instruction 文件的发现发生在会话启动时，中途新建的不被当前会话拾取。需在新会话中用 `/context` 查看 **Memory files** 确认。
+- 2026-08-11 补记：path-scoped rules 的加载行为已实测确认，详见下方「怎么验证 rules 生效」。同日迁入 `handoff` skill 及其完整开发资产，新增 `.claude/rules/handoff.md`。
