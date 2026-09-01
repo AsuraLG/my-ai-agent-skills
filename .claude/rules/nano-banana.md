@@ -43,7 +43,7 @@ paths:
 - CLI 映射：`--aspect-ratio` → `image_config.aspect_ratio`，`--size` → `image_config.image_size`
 - `aspect_ratio` 支持 `1:1` `2:3` `3:2` `3:4` `4:3` `4:5` `5:4` `9:16` `16:9` `21:9` `1:4` `4:1` `1:8` `8:1`，默认 `1:1`
 - `image_size` 支持 `0.5K` `1K` `2K` `4K`，默认 `1K`
-- 命中默认值可不显式透传给 provider
+- 无论用户是否显式指定，都必须向 provider 显式透传 `aspect_ratio` 与 `image_size`；缺省时使用 `1:1` 与 `1K`
 - 请求前终端打印本次生效的 `image_config`，便于调试
 
 ## 配置

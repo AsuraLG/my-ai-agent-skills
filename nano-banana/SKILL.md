@@ -2,8 +2,8 @@
 name: nano-banana
 description: 使用 Google Nano Banana系列模型生成图片。当用户要求根据描述（包括文字和图片）生成图片时，使用此 skill 调用图像生成 API。
 metadata:
-  version: v1
-  last_updated: "2026-07-02"
+  version: v2
+  last_updated: "2026-09-01"
 ---
 
 # Nano Banana 图像生成
@@ -87,10 +87,10 @@ OpenRouter 当前会：
 - 请求 `chat/completions` 接口
 - 在 `messages[].content` 中传递文字与可选参考图（支持多张）
 - 显式携带 `modalities: ["image", "text"]`
-- 当传入 `--size` 或 `--aspect-ratio` 时，仅在 `provider_type=openrouter` 下透传到 `image_config`
+- 在 `provider_type=openrouter` 下始终向 `image_config` 显式传递 `aspect_ratio` 与 `image_size`
 - `--aspect-ratio` 支持：`1:1`、`2:3`、`3:2`、`3:4`、`4:3`、`4:5`、`5:4`、`9:16`、`16:9`、`21:9`、`1:4`、`4:1`、`1:8`、`8:1`
 - `--size` 支持：`0.5K`、`1K`、`2K`、`4K`
-- `1:1` 和 `1K` 是 OpenRouter 默认值；不传时由 provider 使用默认值
+- 未传 `--aspect-ratio` 或 `--size` 时，脚本分别使用 `1:1` 和 `1K`，并显式传给 OpenRouter，不依赖远端默认值
 - 优先从 `choices[0].message.images[*].image_url.url` 提取结果
 - 同时兼容 data URL 与普通图片 URL 返回
 
@@ -141,8 +141,8 @@ uv run python scripts/generate_image.py --prompt "描述文字" [--image /path/t
 - `--prompt`: 必填，图像描述
 - `--image`: 可选，参考图片路径，支持传入多张（空格分隔），例如 `--image a.png b.png c.png`
 - `--output`: 可选，输出文件名（默认 `output.png`）
-- `--size`: 可选，OpenRouter `image_size`，例如 `1K`；当前仅在 `provider_type=openrouter` 时有值才透传
-- `--aspect-ratio`: 可选，宽高比，例如 `16:9`；当前仅在 `provider_type=openrouter` 时有值才透传
+- `--size`: 可选，OpenRouter `image_size`，例如 `1K`；未传时使用并显式发送默认值 `1K`
+- `--aspect-ratio`: 可选，宽高比，例如 `16:9`；未传时使用并显式发送默认值 `1:1`
 
 ### 示例
 

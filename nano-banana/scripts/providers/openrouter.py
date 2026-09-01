@@ -46,30 +46,33 @@ def build_openrouter_request(
 
     image_config = {}
 
-    aspect_ratio = config.get("aspect_ratio")
-    if aspect_ratio:
-        normalized_aspect_ratio = str(aspect_ratio).strip()
-        if normalized_aspect_ratio not in SUPPORTED_ASPECT_RATIOS:
-            supported = ", ".join(sorted(SUPPORTED_ASPECT_RATIOS))
-            raise ValueError(
-                f"OpenRouter aspect_ratio 不支持: {normalized_aspect_ratio}，当前仅支持: {supported}"
-            )
-        if normalized_aspect_ratio != DEFAULT_ASPECT_RATIO:
-            image_config["aspect_ratio"] = normalized_aspect_ratio
+    raw_aspect_ratio = config.get("aspect_ratio")
+    normalized_aspect_ratio = (
+        DEFAULT_ASPECT_RATIO
+        if raw_aspect_ratio is None
+        else str(raw_aspect_ratio).strip()
+    )
+    if normalized_aspect_ratio not in SUPPORTED_ASPECT_RATIOS:
+        supported = ", ".join(sorted(SUPPORTED_ASPECT_RATIOS))
+        raise ValueError(
+            f"OpenRouter aspect_ratio 不支持: {normalized_aspect_ratio}，当前仅支持: {supported}"
+        )
+    image_config["aspect_ratio"] = normalized_aspect_ratio
 
-    image_size = config.get("size")
-    if image_size:
-        normalized_image_size = str(image_size).strip().upper()
-        if normalized_image_size not in SUPPORTED_IMAGE_SIZES:
-            supported = ", ".join(sorted(SUPPORTED_IMAGE_SIZES))
-            raise ValueError(
-                f"OpenRouter image_size 不支持: {normalized_image_size}，当前仅支持: {supported}"
-            )
-        if normalized_image_size != DEFAULT_IMAGE_SIZE:
-            image_config["image_size"] = normalized_image_size
+    raw_image_size = config.get("size")
+    normalized_image_size = (
+        DEFAULT_IMAGE_SIZE
+        if raw_image_size is None
+        else str(raw_image_size).strip().upper()
+    )
+    if normalized_image_size not in SUPPORTED_IMAGE_SIZES:
+        supported = ", ".join(sorted(SUPPORTED_IMAGE_SIZES))
+        raise ValueError(
+            f"OpenRouter image_size 不支持: {normalized_image_size}，当前仅支持: {supported}"
+        )
+    image_config["image_size"] = normalized_image_size
 
-    if image_config:
-        payload["image_config"] = image_config
+    payload["image_config"] = image_config
 
     return payload
 
