@@ -1,9 +1,9 @@
 ---
 name: handoff
-description: Use when handing work off to a new session, another agent, or another platform — context is filling up, the session must be closed and reopened later, or another AI/role will take over implementation. Also triggers on 交接 / 开新会话 / 上下文快满了 / 这段会话要结束了 / 让 Codex 去实现. Writes the session's conclusions into the project's durable docs, then produces a ready-to-paste prompt for whoever picks the work up.
+description: Use when handing work off to a new session, another agent, or another platform — context is filling up, the session must be closed and reopened later, or another AI/role will take over implementation. Also triggers on 交接 / 开新会话 / 上下文快满了 / 这段会话要结束了 / 让 Codex 去实现. Writes conclusions into the project's durable docs and produces a one-time handoff prompt in .handoff/inbox for the next agent to consume.
 metadata:
-  version: v1
-  last_updated: "2026-08-07"
+  version: v3
+  last_updated: "2026-09-01"
 ---
 
 # Handoff
@@ -12,6 +12,31 @@ metadata:
 
 1. **该落盘的落盘** —— 本会话产生的结论进项目既有的 durable 文档
 2. **一份能直接粘贴的 prompt** —— 只装指针，不装内容
+
+## 交接件生命周期（一次性）
+
+handoff prompt 是一次性接力载体，不是项目长期上下文。只有 prompt 文件参与以下生命周期；
+`project-profile`、事实账本和其他 durable 文档继续按本 skill 的原有规则保留、提交和维护。
+`project-profile` 的事实源地图不得记录具体的 `.handoff` prompt、账本、`latest.md` 或其他一次性交接文件；
+`.handoff/inbox/` 和 `.handoff/archive/` 只是交接操作目录，不是长期事实源。
+
+| 状态 | 位置 | 规则 |
+|---|---|---|
+| 待消费 | `.handoff/inbox/<date>-<topic>-prompt.md` | 新生成的 handoff prompt 必须落在这里；文件名必须唯一，prompt 中写明该文件的绝对路径。 |
+| 消费中 | 仍在 `inbox` | 接收方只读取用户明确指向的这一份文件，不扫描 `.handoff`，也不读取 `archive`。 |
+| 已消费 | `.handoff/archive/<same-file-name>` | 接收方已经读完指定文件、完成路径/模式/边界自检并确认可以继续执行后，才把这个单文件移动到 `archive`。 |
+| 中断或阻塞 | 仍在 `inbox` | 文件读取失败、路径不可达、信息不足、需要用户裁决或接力尚未完成时，不得归档。 |
+
+归档使用可恢复的单文件移动，不使用目录级通配符，也不把 durable 文档一并移动。移动后必须复核：
+源文件不存在、目标文件存在；复核失败时如实报告并保留原文件。普通非接力任务不应扫描
+`inbox` 或 `archive`。
+
+为兼容原有“一行指针”入口，新 handoff 可以在待消费期间保留一个临时的 `.handoff/latest.md` 镜像；
+它必须与 `inbox` 中的权威 prompt 逐字节一致，且不能被当作第二份独立交接件。新生成的 prompt 始终
+指向唯一的 `inbox` 绝对路径；接收方完成自检后先清理临时 `latest.md`，再归档 `inbox` 中的权威文件。
+如果用户明确指向旧的 `.handoff/latest.md` 或旧路径下的 prompt 文件，仍按该指定路径完成一次消费；
+消费成功后清理旧入口并将对应单文件移动到 `.handoff/archive/`。不能因为看到目录中有旧文件就主动扫描
+或继承它。
 
 ## 首要约束：本 skill 常在上下文紧张时运行
 
@@ -103,22 +128,56 @@ git stash list                    # 有 stash 必须写进 prompt，否则接手
 
 三份产出，按序落盘：
 
-1. **交接文档** → 落到 profile 的「交接件落点」。有账本则**追加**进账本，位置与顺序遵循该账本
-   既有惯例；追加时必须带**显式失效声明**（如「以本段为准，下方全部过时」）。
-2. **完整 prompt** → 写入 `.handoff/<date>-<topic>-prompt.md`，**同时在终端打印全文**供用户过目。
-3. **固定入口** → `.handoff/latest.md`，内容与本次 prompt 一致。
+1. **稳定交接文档** → 落到 profile 的「交接件落点」。只有 profile 指向项目内稳定 durable 文档时才**追加**；
+   不得把 `.handoff/inbox/`、`.handoff/archive/` 或具体 handoff 文件当作长期账本。位置与顺序遵循该账本
+   既有惯例；追加时必须带**显式失效声明**（如「以本段为准，下方全部过时」）。若未探测到稳定事实源，
+   把缺口报告给用户，等待指定 durable 文档后再回填。
+2. **完整 prompt** → 写入前先确认 `.handoff/inbox/<date>-<topic>-prompt.md` 不存在；确认无同名冲突后写入该路径，
+   文件名必须唯一，**同时在终端打印全文**供用户过目。
+3. **接力指针** → 在 prompt 中写入本次 inbox 文件的绝对路径；为兼容旧的一行入口，可建立逐字节一致的
+   临时 `.handoff/latest.md` 镜像，并用 `diff` 复核。用户把 prompt 交给接收方后，接收方按「交接件生命周期」
+   清理临时镜像并归档 inbox 中的权威单文件；不得留下长期有效的 `latest.md`。
 
-🔴 **覆盖/删除类命令一律走绝对路径的二进制并复核结果。** `cp` / `rm` / `mv` 在很多环境里被
-alias 成 `-i`，非交互执行时它们**不报错、也不执行**——你以为写成功了，实际什么都没发生。
+🔴 **交接件镜像和归档移动一律走绝对路径的二进制并复核结果。** `cp` / `mv` 在很多环境里被 alias
+成 `-i`，非交互执行时可能不按预期完成——你以为写入或归档成功了，实际文件仍未按协议变化。
+
+生成阶段（兼容旧的一行入口时才执行）：
 
 ```bash
-/bin/cp -f <prompt 文件> .handoff/latest.md
-diff <prompt 文件> .handoff/latest.md      # 必须逐字节一致，别省这一步
+inbox_dir="/绝对路径/.handoff/inbox"
+handoff_file="${inbox_dir}/<date>-<topic>-prompt.md"
+latest_file="/绝对路径/.handoff/latest.md"
+/bin/mkdir -p "${inbox_dir}"
+if [ -e "${latest_file}" ] || [ -L "${latest_file}" ]; then
+  printf '%s\n' "latest 镜像已存在，停止并报告冲突" >&2
+  exit 1
+fi
+/bin/cp -f "${handoff_file}" "${latest_file}"
+diff "${handoff_file}" "${latest_file}"
 ```
 
-本项目实测撞过三次：两次是 `cp` 让 `latest.md` 留了旧内容；一次是 `rm` 没删掉旧软链，
-导致随后的 `ln -s` 把新链接建进了旧链接指向的目录里，造出**自指的循环软链**。
-**判据是复核命令的输出，不是命令有没有报错。**
+消费阶段（接手自检完成后执行）：
+
+```bash
+archive_dir="/绝对路径/.handoff/archive"
+handoff_file="/绝对路径/.handoff/inbox/<date>-<topic>-prompt.md"
+archive_file="${archive_dir}/<date>-<topic>-prompt.md"
+latest_file="/绝对路径/.handoff/latest.md"
+/bin/mkdir -p "${archive_dir}"
+if [ -e "${archive_file}" ]; then
+  printf '%s\n' "archive 目标已存在，停止并保留 inbox 文件" >&2
+  exit 1
+fi
+if [ -e "${latest_file}" ] || [ -L "${latest_file}" ]; then
+  diff "${handoff_file}" "${latest_file}"
+  /bin/unlink "${latest_file}"
+fi
+/bin/mv "${handoff_file}" "${archive_file}"
+test ! -e "${handoff_file}" && test -e "${archive_file}" && test ! -e "${latest_file}" && test ! -L "${latest_file}"
+```
+
+**判据是复核命令的输出，不是命令有没有报错。** 镜像或归档失败时不得把 handoff 说成已消费，
+也不得删除 inbox 权威源文件来“补救”；如果是接力中断，保留 inbox 文件和（如存在的）latest 镜像供重试。
 
 🔴 **交接件自身的提交会让 HEAD 再前进一个**——这不可避免（要提交就有新 commit；
 把新 sha 写进去再提交，它又变了，会递归）。所以第 2 段的自愈判定**不许写「首行应为 `<sha>`」**，
@@ -128,18 +187,21 @@ diff <prompt 文件> .handoff/latest.md      # 必须逐字节一致，别省这
 若选择不提交交接件（留作未跟踪文件），HEAD 精确等于采集值，但**必须在 prompt 里写明
 这些文件未进版本管理**，否则接手方在别的 worktree 或别的机器上会找不到它们。
 
-第 3 项的作用：用户在新会话里无需粘贴数千字，只需一行——
+接力 prompt 本身是交给新会话的唯一指针。新会话只应按 prompt 中的绝对路径读取本次 handoff，
+新 prompt 的默认入口是 inbox 中的唯一文件；不要扫描 `.handoff` 或读取 `archive`。旧 prompt 若明确
+指向 `.handoff/latest.md`，才使用该临时兼容入口：
 
 ```
-读 /绝对路径/.handoff/latest.md 并严格按它执行
+读 /绝对路径/.handoff/inbox/<date>-<topic>-prompt.md 并严格按它执行；接手自检完成后清理 latest 镜像并归档该文件
 ```
 
-跨平台同样适用，任何 agent 都能读本地文件。
+跨平台交接仍按平台档案翻译；目标平台若无法访问该绝对路径，必须提供等价的可达交接路径或明确报告
+无法消费，确认接收前不得把 inbox 文件归档。
 
 prompt 用十段骨架（🔒 为必填；其余按探测结果决定是否输出）：
 
 ```
-🔒 1. 接手 <项目> <主题>。这是接力 / 这是委派。
+🔒 1. 接手 <项目> <主题>。这是接力 / 这是委派。接力件：/绝对路径/.handoff/inbox/<date>-<topic>-prompt.md
 🔒 2. 你在哪 ── 工作目录绝对路径 / 分支 / HEAD / 工作区状态 / 从哪启动会话的警告
    3. 别重复做 ── 已就绪的环境、已完成的事
    4. 基线数字 ── 测试结果 + 哪条失败是预期的
@@ -193,8 +255,9 @@ prompt 用十段骨架（🔒 为必填；其余按探测结果决定是否输�
    同一处错误要反复纠正，且用户分不清是 skill 又错了还是自己记错。
 3. **事实不许凭记忆**，HEAD / 测试数字 / 工作区状态 / 分支一律跑命令取。
 4. **prompt 只装指针不装内容。** 判断标准：接手方不读那份文档也能干活，就说明内容被抄进来了。
-5. **③ 早于 ④，顺序不许换**（理由见 ④）。
-6. **不得把某个具体项目的文档名 / 流程名 / 工具名写进本 skill。** 项目形态一律靠探测得出。
+5. **一次性消费。** handoff prompt 只服务于一次接力；消费完成后归档，后续普通任务不再读取它。
+6. **③ 早于 ④，顺序不许换**（理由见 ④）。
+7. **不得把某个具体项目的文档名 / 流程名 / 工具名写进本 skill。** 项目形态一律靠探测得出。
 
 ## profile 维护
 

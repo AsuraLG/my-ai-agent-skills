@@ -68,6 +68,20 @@ plan 里提到的 `~/.claude/skills/handoff` 软链指向「本仓库 `skills/ha
 
 原 README 里的安装说明（软链到 `skill_handoff_dev/skills/handoff`）已随迁移作废，未搬入本文件。本仓库不负责 skill 的安装与部署。
 
+### 一次性交接件与稳定事实源分离（v2/v3，2026-09-01）
+
+实际接力中暴露出一个边界问题：后续会话容易把已经消费过的 handoff 文件当作长期项目上下文，
+而 `project-profile` 也曾登记具体 prompt、账本和 `latest.md`，导致一次性交接件与稳定事实源耦合。
+
+v2 将 prompt 定义为一次性载体：新 prompt 写入 `.handoff/inbox/`，接收方只读取用户明确指向的单文件，
+完成自检后移动到 `.handoff/archive/`；中断、阻塞或路径不可达时保留在 inbox。新流程不再把 `latest.md`
+作为默认入口，也不扫描 archive；旧 prompt 明确指向 `latest.md` 时仍允许兼容消费。
+
+v3 进一步收紧职责：`project-profile` 只能记录项目内稳定 durable 文档，不能记录具体 handoff 文件或
+`.handoff/inbox/archive`；没有稳定事实源时必须报告缺口并请求用户指定落点。为保留旧的一行入口能力，
+待消费期间可选创建与 inbox 权威文件逐字节一致的临时 `latest.md` 镜像，消费时先校验并清理镜像，
+再将权威文件归档。生成和归档均检查同名冲突，并用绝对路径二进制与结果复核保护文件安全。
+
 ## 踩坑记录
 
 ### 把 Claude Code 当「母语」、别的平台当「降级」
@@ -109,3 +123,5 @@ D11 裁定由全新 subagent 执行 spec §10 三项验证。理由：主会话�
 ## 版本变更
 
 - **v1**（2026-08-04 初版，2026-08-07 最后一次内容改动）。2026-08-10 迁入本仓库时补齐 frontmatter 的 `metadata.version` 与 `last_updated`——原 frontmatter 只有 `name` 与 `description`，不符合本仓库规范。补 metadata 不改变执行行为，因此不递增版本号。
+- **v2**（2026-09-01）：将 handoff prompt 改为一次性 `inbox` → `archive` 生命周期，停止新建 `latest.md`，保留旧入口的显式兼容消费；同步更新探测落点与 prompt 骨架。
+- **v3**（2026-09-01）：分离稳定 durable 事实源与一次性交接件，禁止 `project-profile` 登记具体 handoff 文件；补充可选临时 `latest.md` 镜像、跨平台路径可达性、生成/归档冲突检查和归档复核。
