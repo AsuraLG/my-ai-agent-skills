@@ -1,6 +1,7 @@
-"""OpenRouter provider adapter."""
+"""OpenRouter chat-completions provider adapter."""
 
-from typing import Any, Dict, List, Optional
+import re
+from typing import Any, Callable, Dict, List, Optional, Tuple
 
 SUPPORTED_ASPECT_RATIOS = {
     "1:1",
@@ -21,6 +22,26 @@ SUPPORTED_ASPECT_RATIOS = {
 SUPPORTED_IMAGE_SIZES = {"0.5K", "1K", "2K", "4K"}
 DEFAULT_ASPECT_RATIO = "1:1"
 DEFAULT_IMAGE_SIZE = "1K"
+OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1"
+EXPLICIT_SIZE_PATTERN = re.compile(r"^\s*(\d+)\s*[xX*]\s*(\d+)\s*$")
+
+
+def prepare_openrouter_parameters(
+    size: Optional[str],
+    aspect_ratio: Optional[str],
+    confirm: Callable[[str], bool],
+) -> Tuple[Optional[str], Optional[str], bool]:
+    """Validate chat endpoint parameters and ask before ignoring pixel sizes."""
+    if size is not None and EXPLICIT_SIZE_PATTERN.match(str(size)):
+        should_continue = confirm(
+            "当前 openrouter provider 的 chat/completions 接口只支持 "
+            "0.5K/1K/2K/4K，不能使用 WIDTH*HEIGHT 形式。"
+            "继续将忽略 --size 并使用默认 1K，是否继续？"
+        )
+        if not should_continue:
+            return size, aspect_ratio, False
+        size = None
+    return size, aspect_ratio, True
 
 
 def build_openrouter_request(

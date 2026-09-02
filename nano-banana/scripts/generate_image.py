@@ -17,6 +17,8 @@ from _runtime import ensure_skill_venv
 from providers import (
     build_provider_request,
     parse_provider_image_response,
+    prepare_provider_parameters,
+    resolve_provider_base_url,
     resolve_provider_endpoint,
     resolve_provider_type,
 )
@@ -84,7 +86,9 @@ def load_config() -> Dict[str, Any]:
     provider_type = os.environ.get("NANOBANANA_PROVIDER_TYPE") or config.get(
         "provider_type", "openai_compatible"
     )
-    base_url = os.environ.get("NANOBANANA_BASE_URL") or config.get("base_url")
+    provider_type = resolve_provider_type(provider_type)
+    configured_base_url = os.environ.get("NANOBANANA_BASE_URL") or config.get("base_url")
+    base_url = resolve_provider_base_url(provider_type, configured_base_url)
     api_key = os.environ.get("NANOBANANA_API_KEY") or config.get("api_key")
     model_id = os.environ.get("NANOBANANA_MODEL_ID") or config.get("model_id")
 
@@ -100,8 +104,8 @@ def load_config() -> Dict[str, Any]:
         print("错误: 请先配置 API", file=sys.stderr)
         print("", file=sys.stderr)
         print("方式一（环境变量）:", file=sys.stderr)
-        print('  export NANOBANANA_PROVIDER_TYPE="openai_compatible"  # 推荐，可选值: openrouter / openai_compatible', file=sys.stderr)
-        print('  export NANOBANANA_BASE_URL="https://your-api-endpoint.com/v1"', file=sys.stderr)
+        print('  export NANOBANANA_PROVIDER_TYPE="openai_compatible"  # 可选值: openrouter / openrouter_images / openai_compatible', file=sys.stderr)
+        print('  export NANOBANANA_BASE_URL="https://your-api-endpoint.com/v1"  # OpenRouter 无需设置', file=sys.stderr)
         print('  export NANOBANANA_API_KEY="your-api-key"', file=sys.stderr)
         print('  export NANOBANANA_MODEL_ID="your-model-id"', file=sys.stderr)
         print('  export NANOBANANA_PROXY_ENABLED="true"  # 可选', file=sys.stderr)
@@ -129,8 +133,8 @@ def load_config() -> Dict[str, Any]:
         sys.exit(1)
 
     return {
-        "provider_type": resolve_provider_type(provider_type),
-        "base_url": base_url.rstrip("/"),
+        "provider_type": provider_type,
+        "base_url": base_url,
         "api_key": api_key,
         "model_id": model_id,
         "proxy_enabled": proxy_enabled,
@@ -208,6 +212,16 @@ def decode_image_result(image_data: str, proxies: Optional[Dict[str, str]]) -> b
     return base64.b64decode(image_data)
 
 
+def confirm_parameter_warning(message: str) -> bool:
+    """Ask the user whether to continue after a parameter is ignored or changed."""
+    print(f"警告: {message}", file=sys.stderr)
+    try:
+        answer = input("请输入 y 继续，其他输入取消: ").strip().lower()
+    except EOFError:
+        return False
+    return answer in {"y", "yes"}
+
+
 def generate_image(
     prompt: str,
     image_paths: Optional[List[str]] = None,
@@ -217,6 +231,14 @@ def generate_image(
 ):
     """调用 Nano Banana API 生成图片"""
     config = load_config()
+    config["size"] = size
+    config["aspect_ratio"] = aspect_ratio
+    size, aspect_ratio, should_continue = prepare_provider_parameters(
+        config["provider_type"], size, aspect_ratio, confirm_parameter_warning
+    )
+    if not should_continue:
+        print("已取消本次请求。", file=sys.stderr)
+        sys.exit(1)
     config["size"] = size
     config["aspect_ratio"] = aspect_ratio
     proxies = build_proxies(config)
@@ -269,7 +291,10 @@ def generate_image(
             return
 
         print("错误: 无法解析 API 响应", file=sys.stderr)
-        print(json.dumps(result, indent=2, ensure_ascii=False), file=sys.stderr)
+        if isinstance(result, str):
+            print(result[:4000], file=sys.stderr)
+        else:
+            print(json.dumps(result, indent=2, ensure_ascii=False), file=sys.stderr)
         sys.exit(1)
 
     except requests.exceptions.Timeout:
@@ -291,10 +316,22 @@ if __name__ == "__main__":
     parser.add_argument("--prompt", "-p", required=True, help="图像描述文字")
     parser.add_argument("--image", "-i", nargs="+", help="参考图片路径，支持传入多张（空格分隔）")
     parser.add_argument("--output", "-o", default="output.png", help="输出文件名")
-    parser.add_argument("--size", help="OpenRouter image_size，可选值: 0.5K / 1K / 2K / 4K")
-    parser.add_argument("--aspect-ratio", help="OpenRouter aspect_ratio，例如 16:9 / 1:1 / 9:16")
+    parser.add_argument(
+        "--size",
+        metavar="SIZE",
+        help="图片尺寸: 0.5K / 1K / 2K / 4K / WIDTH*HEIGHT",
+    )
+    parser.add_argument(
+        "--aspect-ratio",
+        metavar="RATIO",
+        help=(
+            "图片宽高比: 1:1 / 1:4 / 1:8 / 2:3 / 3:2 / 3:4 / 4:1 / "
+            "4:3 / 4:5 / 5:4 / 8:1 / 9:16 / 16:9 / 21:9"
+        ),
+    )
 
     arguments = parser.parse_args()
+
     generate_image(
         arguments.prompt,
         arguments.image,

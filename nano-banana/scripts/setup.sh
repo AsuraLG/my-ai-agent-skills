@@ -29,7 +29,7 @@ echo ""
 echo "请配置 API："
 echo ""
 echo "方式一（环境变量）:"
-echo '  export NANOBANANA_BASE_URL="https://your-endpoint.com/v1"'
+echo '  export NANOBANANA_PROVIDER_TYPE="openrouter_images"  # 或 openrouter / openai_compatible'
 echo '  export NANOBANANA_API_KEY="your-key"'
 echo '  export NANOBANANA_MODEL_ID="your-model-id"'
 echo ""
