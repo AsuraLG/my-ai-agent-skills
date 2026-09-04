@@ -1,0 +1,7 @@
+interface:
+  display_name: "agents-claude-md-sync"
+  short_description: "同步项目根目录的 AGENTS 与 CLAUDE 文件"
+  default_prompt: "使用 $agents-claude-md-sync 检查并同步当前项目根目录的 AGENTS.md 与 CLAUDE.md。"
+
+policy:
+  allow_implicit_invocation: false
