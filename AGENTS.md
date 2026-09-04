@@ -11,6 +11,7 @@
 | 内容 | 位置 |
 | --- | --- |
 | `SKILL.md`、`scripts/`、`references/`、`assets/`、`schemas/`、`template/` | skill 目录内 |
+| `agents/openai.yaml`（通用和 Codex/OpenAI 专用 skill 必需） | skill 目录内 |
 | `evals/`、`tests/`、`tests/fixtures/` | skill 目录内（是 skill 的验证资产，跟着走才有意义） |
 | 改该 skill 代码时必须遵守的约束 | `.claude/rules/<skill-name>.md` |
 | 设计决策、踩坑记录、当前状态、版本变更 | `dev/<skill-name>/NOTES.md` |
@@ -20,9 +21,9 @@
 
 `dev/NOTES.md`（`dev/` 根下那份）记录仓库自身的结构与规范决策，不属于任何单个 skill。
 
-## 开发约束写 .claude/rules/，不写进 skill 目录
+## 开发约束与 Agent 读取
 
-约束类内容（「现在该怎么做」）放 `.claude/rules/<skill-name>.md`，用 `paths` frontmatter 绑定到对应 skill 目录：
+约束类内容（「现在该怎么做」）放 `.claude/rules/<skill-name>.md`，用 `paths` frontmatter 绑定到对应 skill 目录。该目录属于本仓库的开发约束，不随 skill 分发：
 
 ```markdown
 ---
@@ -31,28 +32,37 @@ paths:
 ---
 ```
 
-这样一动 `nano-banana/` 下的文件，该约束自动进上下文；不动就不占 context；文件不在 skill 目录内，不会分发给使用者。
+Codex CLI 不会自动发现 `.claude/rules/`；处理或修改对应 skill 时，必须根据本 `AGENTS.md` 主动读取匹配的规则文件。文件不在 skill 目录内，不会分发给使用者。
 
 与 `NOTES.md` 的分工：
 
 | | `.claude/rules/<skill>.md` | `dev/<skill>/NOTES.md` |
 | --- | --- | --- |
 | 内容 | 现在该怎么做（约束、禁止项、验证命令） | 当初为什么这么定、当前状态、已知问题、待办 |
-| 加载 | 读到匹配文件时自动加载 | 不自动加载，需要时才查 |
+| 加载 | Claude Code 按自身规则机制加载；Codex 处理对应 skill 时主动读取 | 不自动加载，需要时才查 |
 
-**不要把开发约束写进 skill 目录内的 `CLAUDE.md`**——那个位置既会分发给使用者，又不会在开发时自动加载（子目录 CLAUDE.md 只在读取该子目录下的文件时才加载，而开发时读的是 skill 目录里的代码）。
+不要把开发约束写进 skill 目录内的 `CLAUDE.md`。它属于分发内容，不是本仓库的开发约束文件。
 
-已知限制：`/compact` 之后 path-scoped rules 不会自动重新注入，要重新读到匹配文件才 reload。必须每次都生效的规则写在本文件里。
+## Skill 规范
 
-## 新建一个 skill
+### 适用范围与 Agent 平台
 
-1. 在根目录建 `<skill-name>/`，写 `SKILL.md`
-2. 建 `dev/<skill-name>/NOTES.md`，套用下方模板
-3. 更新 `README.md` 的 skill 表格（表格是使用者的入口，漏了等于没发布）
+- 如果用户没有明确说明 skill 只适用于某个或某些 Agent，且 skill 自身的 `description`、`compatibility` 等说明也没有限定 Agent，则视为**通用 skill**。
+- 通用 skill 和明确面向 Codex/OpenAI 的专用 skill，都必须提供 `agents/openai.yaml`。
+- 本仓库当前只定义通用 skill 与 Codex/OpenAI 专用 skill 的 OpenAI 元数据要求；其他 Agent 的专属规则在实际引入时再补充。
 
-## SKILL.md frontmatter
+### 分发文件
 
-必填：
+使用者需要的文件放在 skill 目录内，开发过程专用的约束、决策记录和调试产物放在仓库外层对应目录：
+
+- 必需：`SKILL.md`
+- 通用或 Codex/OpenAI 专用 skill 必需：`agents/openai.yaml`
+- 按功能需要添加：`scripts/`、`references/`、`assets/`、`schemas/`、`template/`、`evals/`、`tests/`
+- 不随 skill 分发：`.claude/rules/<skill-name>.md`、`dev/<skill-name>/NOTES.md`、`dev/<skill-name>/scratch/`
+
+### SKILL.md
+
+`SKILL.md` frontmatter 必须包含：
 
 ```yaml
 ---
@@ -66,15 +76,48 @@ metadata:
 
 可选：`compatibility`（例如 `Claude Code only`，仅在 skill 依赖特定 harness 时写）。
 
-`description` 是 skill 的对外接口，决定它何时被触发。改动 `description` 属于影响执行结果的变更，必须递增版本号。
+`description` 是 skill 的对外接口，决定它何时被触发；`name` 必须与 skill 目录名一致。
 
-## 版本号
+### agents/openai.yaml
 
-**构成 skill 的任何一部分发生变化，都递增 `version`**，包括 `SKILL.md` 正文的措辞调整——正文就是执行指令，改措辞就可能改变 agent 行为。
+通用 skill 和明确面向 Codex/OpenAI 的专用 skill 都必须创建该文件，且至少包含以下非空字符串字段：
 
-不按「大改升版本、小修不升」判断：「小修」无法客观划界，一旦版本号与实际内容脱钩，版本号就失去对账价值。
+```yaml
+interface:
+  display_name: "Skill 的界面名称"
+  short_description: "Skill 的简短说明"
+  default_prompt: "使用 $skill-name ..."
+```
 
-递增 `version` 时同步更新 `last_updated`。
+`interface.default_prompt` 应明确使用对应的 `$<skill-name>` 调用该 skill。其他界面字段和调用策略字段按实际需要添加。
+
+`interface.display_name` 就是 skill 名称，必须与 `SKILL.md` 的 `name` 和 skill 目录名一致，不使用其他展示名称。
+
+### 版本管理
+
+构成 skill 的任何一部分发生变化，都必须递增 `SKILL.md` 的 `metadata.version`，并同步更新 `metadata.last_updated`。这包括但不限于：
+
+- `SKILL.md` 的正文或 frontmatter
+- `description`、`compatibility` 等触发和适用范围字段
+- `agents/openai.yaml` 的任意配置
+- `scripts/`、`references/`、`assets/`、`schemas/`、`template/`、`evals/`、`tests/` 中的 skill 文件
+
+不按「大改升版本、小修不升」判断；只要 skill 内容发生变化，就必须升级版本，避免版本号与实际内容脱钩。
+
+### 新建或修改 Skill 的检查清单
+
+1. 判断 skill 的适用范围和 Agent 平台。
+2. 创建或确认 `<skill-name>/SKILL.md`。
+3. 通用 skill 或 Codex/OpenAI 专用 skill 创建或确认 `agents/openai.yaml`。
+4. 创建或更新 `dev/<skill-name>/NOTES.md`。
+5. 创建或更新 `.claude/rules/<skill-name>.md` 中的开发约束。
+6. 更新 `metadata.version` 和 `metadata.last_updated`。
+7. 更新 `README.md` 的 skill 表格（表格是使用者的入口，漏了等于没发布）。
+8. 执行该 skill 对应的验证命令，并检查分发目录中没有开发专用文件。
+
+## 开发记录
+
+`dev/<skill-name>/NOTES.md` 记录设计决策、踩坑记录、当前状态和版本变更；该文件不随 skill 分发。
 
 ## NOTES.md 模板
 
