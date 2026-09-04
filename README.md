@@ -16,7 +16,8 @@ AI Agent 自用 skill 合集。
 | `github-tool-research` | 深度调研并对比 GitHub 上的多个工具/开源项目，围绕用户的取舍标准做证据分级调研，产出结论先行、手机友好的 HTML 选型报告，并支持后续迭代更新。 | 本人开发 |
 | `mermaid-beautify` | 将普通 Mermaid 图表代码美化为带主题、配色与节点分组样式的版本，输出始终保持合法 Mermaid 语法（不转 SVG/图片）。 | 本人开发 |
 | `handoff` | 跨会话、跨 Agent、跨平台的工作交接技能。先把本次会话的结论回填进项目的长期文档，再产出一份「只装指针不装内容」的可粘贴 prompt，避免开新会话或上下文压缩后讨论结果丢失。骨架从真实历史交接产物归纳而来。 | 本人开发 |
-| `eli5-visual` | 面向指定受众，将主题、代码、报错或技术文档转化为图文并茂的单文件 HTML 解释内容。 | 本人开发 |
+| `eli5-visual` | 面向指定受众，将主题、代码、报错或技术文档转化为图文并茂的单文件 HTML 解释内容。 | 网络搜集&本人修改 |
+| `agents-claude-md-sync` | 以 `AGENTS.md` 为权威源同步项目根目录的 `CLAUDE.md`，支持安全备份、冲突提醒与结果审阅。 | 本人开发 |
 
 ## 致谢
 
@@ -29,5 +30,7 @@ AI Agent 自用 skill 合集。
 - `travel-guide-maker` 所依赖的 `docx`、`pandoc` 及相关文档生成工具链开发者
 - `xiaohongshu-skills` 的开发者，`travel-guide-maker` 可与其协作实现从小红书搜索采集到攻略文档输出的全流程自动化，原始地址 [xiaohongshu-skills](https://github.com/autoclaw-cc/xiaohongshu-skills)
 - `hv-analysis` 的开发者，原始地址 [khazix-skills](https://github.com/KKKKhazix/khazix-skills)
+- `mermaid-beautify` 参考的 [beautiful-mermaid](https://github.com/lukilabs/beautiful-mermaid) 与 [Pretty-mermaid-skills](https://github.com/imxv/Pretty-mermaid-skills)，本 skill 的部分灵感与美化参数来源于这些项目
+- `eli5-visual` 参考的 [ELI5](https://github.com/DreambigOu/ELI5) 与 [claude-plugins-community](https://github.com/anthropics/claude-plugins-community)，本 skill 在两者基础上修改而来
 
 也感谢所有为这些软件、库、协议和社区持续投入的开发者，让这些 skill 能够被整理、复用并持续演进。
