@@ -1,9 +1,10 @@
 ---
 name: handoff
 description: Use when handing work off to a new session, another agent, or another platform — context is filling up, the session must be closed and reopened later, or another AI/role will take over implementation. Also triggers on 交接 / 开新会话 / 上下文快满了 / 这段会话要结束了 / 让 Codex 去实现. Writes conclusions into the project's durable docs and produces a one-time handoff prompt in .handoff/inbox for the next agent to consume.
+disable-model-invocation: true
 metadata:
-  version: v3
-  last_updated: "2026-09-01"
+  version: v4
+  last_updated: "2026-10-25"
 ---
 
 # Handoff

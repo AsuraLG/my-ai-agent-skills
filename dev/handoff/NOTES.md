@@ -125,3 +125,4 @@ D11 裁定由全新 subagent 执行 spec §10 三项验证。理由：主会话�
 - **v1**（2026-08-04 初版，2026-08-07 最后一次内容改动）。2026-08-10 迁入本仓库时补齐 frontmatter 的 `metadata.version` 与 `last_updated`——原 frontmatter 只有 `name` 与 `description`，不符合本仓库规范。补 metadata 不改变执行行为，因此不递增版本号。
 - **v2**（2026-09-01）：将 handoff prompt 改为一次性 `inbox` → `archive` 生命周期，停止新建 `latest.md`，保留旧入口的显式兼容消费；同步更新探测落点与 prompt 骨架。
 - **v3**（2026-09-01）：分离稳定 durable 事实源与一次性交接件，禁止 `project-profile` 登记具体 handoff 文件；补充可选临时 `latest.md` 镜像、跨平台路径可达性、生成/归档冲突检查和归档复核。
+- **v4**（2026-10-25）：SKILL.md 新增 `disable-model-invocation: true`，仅允许用户显式调用，禁止模型自动触发（description 触发词保留，服务显式调用场景）；新增 `agents/openai.yaml`，以 `allow_implicit_invocation: false` 在 OpenAI 侧对应同一策略，两侧对称。

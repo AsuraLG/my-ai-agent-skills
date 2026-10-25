@@ -1,0 +1,8 @@
+interface:
+  display_name: "handoff"
+  short_description: "跨会话、跨 Agent、跨平台的工作交接：先回填持久文档，再产出一次性交接 prompt"
+  default_prompt: "使用 $handoff 生成本次会话的交接 prompt"
+
+policy:
+  allow_implicit_invocation: false
+
